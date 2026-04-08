@@ -1,0 +1,75 @@
+name: Deploy Dashboard
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 23 * * *'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      TZ: Asia/Shanghai
+      CITY_NAME: ${{ vars.CITY_NAME }}
+      TARGET_DATE: ${{ vars.TARGET_DATE }}
+      ENABLE_AI: ${{ vars.ENABLE_AI }}
+      AI_BASE_URL: ${{ vars.AI_BASE_URL }}
+      AI_MODEL: ${{ vars.AI_MODEL }}
+      AI_API_KEY: ${{ secrets.AI_API_KEY }}
+      ENABLE_EMAIL: ${{ vars.ENABLE_EMAIL }}
+      EMAIL_SERVICE: ${{ vars.EMAIL_SERVICE }}
+      EMAIL_USER: ${{ secrets.EMAIL_USER }}
+      EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+      EMAIL_TO: ${{ vars.EMAIL_TO }}
+      ENABLE_WXPUSHER: ${{ vars.ENABLE_WXPUSHER }}
+      WXPUSHER_APP_TOKEN: ${{ secrets.WXPUSHER_APP_TOKEN }}
+      WXPUSHER_UID: ${{ secrets.WXPUSHER_UID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Generate schedule
+        run: node generate_schedule.js
+
+      - name: Build dashboard site
+        run: npm run build:dashboard
+
+      - name: Send daily message
+        run: node index.js
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./site
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
