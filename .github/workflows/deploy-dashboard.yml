@@ -49,9 +49,6 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Generate schedule
-        run: node generate_schedule.js
-
       - name: Build dashboard site
         run: npm run build:dashboard
 
