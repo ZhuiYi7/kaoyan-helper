@@ -2,7 +2,7 @@ import axios from 'axios';
 import config from './config.js';
 import { userProfile } from './user.js';
 
-export async function getAIContent(weather, fortune, task, dailyQuiz, dailyWord) {
+export async function getAIContent(weather, fortune, task, dailyQuiz, dailyWord, retries = 1) {
   if (!config.ai.enable || !config.ai.apiKey) {
     return null;
   }
@@ -66,7 +66,7 @@ export async function getAIContent(weather, fortune, task, dailyQuiz, dailyWord)
           'Authorization': `Bearer ${config.ai.apiKey}`,
           'Content-Type': 'application/json'
         },
-        timeout: 15000
+        timeout: 30000
       }
     );
 
@@ -88,6 +88,11 @@ export async function getAIContent(weather, fortune, task, dailyQuiz, dailyWord)
     }
   } catch (error) {
     console.error('AI 请求失败:', error.message);
+    if (retries > 0) {
+      console.log(`AI 重试中... (剩余 ${retries} 次)`);
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      return getAIContent(weather, fortune, task, dailyQuiz, dailyWord, retries - 1);
+    }
   }
 
   return null;

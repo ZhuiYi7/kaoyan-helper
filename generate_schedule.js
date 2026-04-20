@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { getPlan22 } from './src/plan22_v3.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -996,10 +997,21 @@ try {
   console.log('No existing schedule found, creating new.');
 }
 
+const schedule22Path = path.join(__dirname, 'schedule22.json');
+let schedule22Data = {};
+try {
+  schedule22Data = JSON.parse(fs.readFileSync(schedule22Path, 'utf-8'));
+} catch (e) {
+  console.log('No existing 22408 schedule found, creating new.');
+}
+
 // ===== 清除 REGENERATE_FROM 之后的旧数据 =====
 const regenStr = `${REGENERATE_FROM.getFullYear()}-${String(REGENERATE_FROM.getMonth()+1).padStart(2,'0')}-${String(REGENERATE_FROM.getDate()).padStart(2,'0')}`;
 for (const key of Object.keys(scheduleData)) {
   if (key >= regenStr) delete scheduleData[key];
+}
+for (const key of Object.keys(schedule22Data)) {
+  if (key >= regenStr) delete schedule22Data[key];
 }
 console.log(`已清除 ${regenStr} 及之后的旧计划，从实际进度重新生成...`);
 
@@ -1062,6 +1074,229 @@ function getCodeFallbackTask(dateStr, monthInt) {
   return pool[dateHashIndex(dateStr, pool.length, 'code-tail')];
 }
 
+function getPhaseDisplayName(phase) {
+  return {
+    prep: '预备期',
+    base: '基础期',
+    strong: '强化期',
+    real: '真题期',
+    sprint: '冲刺期',
+    final: '考前收口期',
+  }[phase] || '推进期';
+}
+
+function build22408Challenge(plan22, monthInt, dateStr) {
+  const text = [plan22.math22, plan22.boost408, plan22.english22, plan22.politics22].join(' | ');
+  const phase = plan22.phase;
+  const pool = [];
+
+  if (/积分|二重积分|微分方程|线代|行列式|矩阵|向量组|方程组|特征值|二次型/.test(text)) {
+    pool.push('数二加固：把今天对应章节的 2 道典型大题完整手写一遍，强制写出步骤分模板。');
+    pool.push('数二加固：闭卷复述今天的核心定义、判定条件和解题起手式，确认不是“看懂了但不会写”。');
+  }
+  if (/图|BFS|DFS|KMP|Cache|页表|PV|TCP|子网|计网|操作系统|计组/.test(text)) {
+    pool.push('408加固：今晚再补 1 题手写代码或计算题，只练最核心步骤，不追求做多。');
+    pool.push('408加固：把今天最易混的 3 个概念做成速记对照表，睡前闭卷回忆一次。');
+    if (/数据结构|树|图|查找|排序|BFS|DFS|KMP/.test(text)) {
+      pool.push('408加固：把今天的数据结构核心代码框架再手写 1 遍，重点检查边界条件和变量定义。');
+    }
+    if (/计组|Cache|流水线|IEEE754|指令系统/.test(text)) {
+      pool.push('408加固：计组今天只盯 1 类计算题，把位数、单位和步骤模板写完整。');
+    }
+    if (/操作系统|PV|调度|页表|页面置换|虚拟内存/.test(text)) {
+      pool.push('408加固：把今天 OS 题目的流程图/状态表再画 1 遍，确保过程不是空的。');
+    }
+    if (/子网|CIDR|IP|TCP|滑动窗口/.test(text)) {
+      pool.push('408加固：把今天的计网计算题模板重写 1 遍，确认子网/TCP过程能无提示列步骤。');
+    }
+    if (/Cache|流水线|IEEE754|页表|PV|调度/.test(text)) {
+      pool.push('408加固：把今天最核心的 1 道计组/OS题按“公式-代入-步骤-结果”重写一遍。');
+    }
+  }
+  if (/英二|阅读|长难句|翻译|作文|新题型|柴荣|颉斌斌|唐静/.test(text)) {
+    pool.push('英二加固：把今天阅读/长难句里最卡的 2 句拆主干、翻译、回译各做一遍。');
+    pool.push('英二加固：把今日生词和熟词僻义整理成 1 组复习卡，明早再快速过一遍。');
+    if (/阅读/.test(text)) {
+      pool.push('英二加固：把今天阅读最关键的 2 道题写出“定位句-正确依据-错误选项为什么错”。');
+    }
+    if (/长难句/.test(text)) {
+      pool.push('英二加固：把今天最绕的 2 句只做主干提取，不求全背，先保证能拆开。');
+    }
+    if (/作文|图表/.test(text)) {
+      pool.push('英二加固：把今天的大/小作文框架再默写 1 次，重点检查开头句、数据描述和结尾建议。');
+    }
+    if (/小作文|书信|通知|告示/.test(text)) {
+      pool.push('英二加固：小作文只检查 3 件事：格式、称呼、结尾，先把基础分锁住。');
+    }
+    if (/翻译/.test(text)) {
+      pool.push('英二加固：把今天翻译里最卡的 1 句按“主干-修饰-顺句序”三步再拆一遍。');
+    }
+    if (/新题型/.test(text)) {
+      pool.push('英二加固：把今天新题型的判断依据写成 3 条，避免做题只凭语感。');
+    }
+  }
+  if (/政治|徐涛|腿姐|肖秀荣|时政/.test(text) || monthInt >= 8) {
+    pool.push('政治加固：把今天接触到的 1 个政治知识点压成“考点-关键词-常见陷阱”三行笔记。');
+    if (phase === 'prep' || phase === 'base') {
+      pool.push('政治加固：只用 10 分钟把五模块结构和后期资料顺序口述一遍，保持不断线即可。');
+    }
+    if (phase === 'strong' || phase === 'real') {
+      pool.push('政治加固：把今天选择题错因归类成“知识点模糊/关键词误判/绝对化排除失误”三类。');
+    }
+    if (phase === 'sprint' || phase === 'final') {
+      pool.push('政治加固：把今天背过的分析题关键词再闭卷默写 1 次，重点查漏而不是盲背新内容。');
+    }
+  }
+
+  if (phase === 'real' || phase === 'sprint' || phase === 'final') {
+    pool.push('套卷加固：今天至少做一次限时收口，不能只看解析不动笔。');
+  }
+  if (!pool.length) {
+    pool.push('收口加固：今晚用 20 分钟做一次主动回忆，复述四科今天真正学会了什么。');
+  }
+  return pool[dateHashIndex(dateStr, pool.length, 'plan22-challenge')];
+}
+
+function pickPlan22Focus(text) {
+  if (/行列式/.test(text)) return '今日重心：行列式先分清性质、展开和初等变换，别把“能算”误当成“会判定”。';
+  if (/矩阵/.test(text)) return '今日重心：矩阵题先判断对象和目标，逆矩阵、秩、初等变换的使用场景别混。';
+  if (/向量组|线性方程组/.test(text)) return '今日重心：别只背结论，必须把“秩-相关性-方程组解结构”这条线打通。';
+  if (/特征值|二次型/.test(text)) return '今日重心：特征值、对角化、二次型要串成一套，不要把每个知识点割裂开。';
+  if (/二重积分/.test(text)) return '今日重心：二重积分先判区域、再定次序、最后决定是否极坐标，步骤顺序不能乱。';
+  if (/微分方程/.test(text)) return '今日重心：微分方程先辨型再套模板，齐次/非齐次和特解形式必须先判断对。';
+  if (/积分/.test(text)) return '今日重心：积分类题目不许只看答案，换元/分部的起手判断一定自己写出来。';
+  if (/子网|CIDR|IP|IPv4|IPv6/.test(text)) return '今日重心：计网计算题要模板化，子网/CIDR/IP类必须做到看题就会列步骤。';
+  if (/TCP|拥塞|滑动窗口|握手|挥手/.test(text)) return '今日重心：TCP类题目重点是状态变化和窗口变化，不要只背名词不画过程。';
+  if (/Cache|流水线|IEEE754/.test(text)) return '今日重心：计组计算题必须把地址拆分、公式代入和单位写完整，训练步骤分。';
+  if (/PV|调度|页表|页面置换|虚拟内存/.test(text)) return '今日重心：OS题先画流程或表格，PV、调度、页表题都要把中间过程显式写出。';
+  if (/数据结构|树|图|查找|排序/.test(text)) return '今日重心：数据结构不是只会背概念，必须把结构特征、复杂度和代码框架串起来。';
+  if (/图|BFS|DFS|KMP/.test(text)) return '今日重心：408代码题核心不是背代码，而是理解框架、边界条件和变量含义。';
+  if (/阅读/.test(text)) return '今日重心：阅读题必须落实到定位句、正确依据和干扰项排除，不能只看题感。';
+  if (/长难句/.test(text)) return '今日重心：长难句先拆主干再看修饰，主谓宾抓不住就别急着翻译全句。';
+  if (/翻译/.test(text)) return '今日重心：翻译题别逐词硬译，先拆主干、再理修饰、最后顺成中文句子。';
+  if (/小作文|书信|通知|告示/.test(text)) return '今日重心：小作文先锁格式分，称呼、段落结构、结尾敬语一个都不能漏。';
+  if (/作文|图表/.test(text)) return '今日重心：英二作文先保证图表描述准确，再写原因和建议，别一上来就套空模板。';
+  if (/新题型/.test(text)) return '今日重心：新题型关键是找逻辑衔接和指代线索，不要只凭语感选。';
+  if (/阅读|长难句|干扰项/.test(text)) return '今日重心：英二不是只看懂文章，而是定位依据、拆干扰项、复述逻辑链。';
+  return '今日重心：所有科目都要从“看懂”推进到“能写、能复述、能限时完成”。';
+}
+
+function pickPlan22Warning(text) {
+  if (/周日/.test(text)) return '易错提醒：周复盘不是放松日，必须把最差模块和最错题真正回炉。';
+  if (/行列式/.test(text)) return '易错提醒：行列式最怕性质乱用，先确认变换对象是行列式还是矩阵本体。';
+  if (/矩阵|向量组|线性方程组/.test(text)) return '易错提醒：线代最怕定义没吃透就硬刷题，计算前先判断对象、秩和结论成立条件。';
+  if (/特征值|二次型/.test(text)) return '易错提醒：特征值和二次型最怕算完不验，正交、合同、相似的关系不能混。';
+  if (/二重积分/.test(text)) return '易错提醒：二重积分最怕区域画错和积分次序乱换，图一定要先画。';
+  if (/子网|CIDR|IP/.test(text)) return '易错提醒：子网题最怕借位和主机位数算错，模板写在纸上再下笔。';
+  if (/TCP|拥塞|滑动窗口/.test(text)) return '易错提醒：TCP题最怕把流量控制和拥塞控制混在一起，窗口变化必须单独写。';
+  if (/Cache|流水线|IEEE754/.test(text)) return '易错提醒：计组题最怕单位漏写、位数看错、步骤跳过，写快不如写稳。';
+  if (/PV|调度|页表|页面置换/.test(text)) return '易错提醒：OS题最怕过程只留结果，PV、调度、页表都得把中间状态写全。';
+  if (/数据结构|树|图|查找|排序/.test(text)) return '易错提醒：数据结构最怕概念和代码脱节，复杂度、结构性质和题目实现必须同时会。';
+  if (/图|BFS|DFS|KMP/.test(text)) return '易错提醒：408最怕“概念熟、步骤乱”，代码题和计算题都要按固定模板写。';
+  if (/阅读/.test(text)) return '易错提醒：阅读最怕只看正确答案不拆错误选项，干扰项逻辑一定要写出来。';
+  if (/长难句/.test(text)) return '易错提醒：长难句最怕一上来就全句硬翻，主干没找出来就一定会乱。';
+  if (/作文|图表/.test(text)) return '易错提醒：英二作文最怕模板味太重，先保证图表描述准确，再写原因和建议。';
+  if (/小作文|书信|通知|告示/.test(text)) return '易错提醒：小作文最容易丢的是格式分，开头称呼和结尾敬语必须机械正确。';
+  if (/新题型/.test(text)) return '易错提醒：新题型最怕凭语感选，必须明确逻辑词、代词和上下文衔接。';
+  if (/阅读|长难句|翻译/.test(text)) return '易错提醒：英语最怕只看解析不自己拆句，真正卡住的句子必须亲手写译文。';
+  return '易错提醒：今天不要堆任务，先把主线任务做完整，再谈额外加练。';
+}
+
+function pickPlan22Checkpoint(text, phase) {
+  if (/行列式|矩阵|向量组|线性方程组|特征值|二次型/.test(text)) return '晚间验收：闭卷说清今天线代章节的定义、核心结论和一道典型题起手步骤。';
+  if (/积分|二重积分|微分方程/.test(text)) return '晚间验收：不用看答案重写 1 道积分或微分方程典型题，检查起手是否正确。';
+  if (/子网|CIDR|TCP|Cache|流水线|IEEE754|PV|调度|页表/.test(text)) return '晚间验收：把今天最核心的 1 道计算题/流程题再做一遍，并口述每一步为什么这么写。';
+  if (/数据结构|树|图|查找|排序|BFS|DFS|KMP/.test(text)) return '晚间验收：手写今天最核心的 1 个代码框架，并解释复杂度和边界条件。';
+  if (/阅读/.test(text)) return '晚间验收：把今天最关键的 2 道阅读题复述出定位句、依据句和错项原因。';
+  if (/长难句/.test(text)) return '晚间验收：把今天最难的 2 句重新拆主干并口头翻译，确认不是只看懂解析。';
+  if (/阅读|长难句|翻译|作文/.test(text)) return '晚间验收：把今天最卡的 2 句或 1 段作文框架复述出来，确认不是只在看懂层面。';
+  if (/新题型/.test(text)) return '晚间验收：把今天新题型的判断依据总结成 3 条规则，再回看 1 题验证。';
+  if (phase === 'base' || phase === 'strong') return '晚间验收：能否不用看资料，说清今天四科各自推进到哪一讲/哪一章/哪一类题。';
+  return '晚间验收：能否在限时条件下复做今天最核心的 1 道题，并说明错因是否清零。';
+}
+
+function pickPlan22Anchor(plan22) {
+  const candidates = [
+    { key: 'math', text: plan22.math22, score: 0 },
+    { key: '408', text: plan22.boost408, score: 0 },
+    { key: 'english', text: plan22.english22, score: 0 },
+    { key: 'politics', text: plan22.politics22, score: 0 },
+  ];
+
+  for (const item of candidates) {
+    const text = item.text || '';
+    if (item.key === 'math') {
+      if (/线代|行列式|矩阵|向量组|方程组|特征值|二次型|积分|二重积分|微分方程|真题|模拟/.test(text)) item.score += 4;
+      if (/第\d+天|660|张宇|李林|武忠祥|没咋了/.test(text)) item.score += 2;
+    }
+    if (item.key === '408') {
+      if (/图|BFS|DFS|KMP|Cache|页表|PV|TCP|子网|计网|操作系统|计组|综合题|手写|计算题/.test(text)) item.score += 4;
+      if (/选择题|代码题|模板|复盘/.test(text)) item.score += 2;
+    }
+    if (item.key === 'english') {
+      if (/阅读|长难句|翻译|作文|新题型|真题|限时|干扰项/.test(text)) item.score += 4;
+      if (/柴荣|颉斌斌|唐静|王江涛|石雷鹏|刘晓艳/.test(text)) item.score += 2;
+    }
+    if (item.key === 'politics') {
+      if (/徐涛|腿姐|肖1000|肖八|肖四|时政|分析题|选择题|技巧班|强化课/.test(text)) item.score += 4;
+      if (plan22.phase === 'strong' || plan22.phase === 'real' || plan22.phase === 'sprint' || plan22.phase === 'final') item.score += 2;
+      if (/轻启动|预备|结构卡/.test(text)) item.score += 1;
+    }
+  }
+
+  candidates.sort((a, b) => b.score - a.score);
+  return candidates[0]?.text || [plan22.math22, plan22.boost408, plan22.english22, plan22.politics22].filter(Boolean).join(' | ');
+}
+
+function build22408Card(plan22, dateStr) {
+  const text = [plan22.math22, plan22.boost408, plan22.english22, plan22.politics22].join(' | ');
+  const anchorText = pickPlan22Anchor(plan22);
+  const phaseName = getPhaseDisplayName(plan22.phase);
+
+  const mathCoach = /线代|行列式|矩阵|向量组|方程组|特征值|二次型/.test(text)
+    ? '数二主抓：武宇乐（没咋了）理概念 + 李永乐题目定步骤'
+    : /积分|二重积分|微分方程/.test(text)
+      ? '数二主抓：张宇推主线，卡题时切武忠祥补拆解'
+      : '数二主抓：张宇主线推进，李林/660负责把题感做出来';
+
+  const englishCoach = /作文/.test(text)
+    ? '英二主抓：石雷鹏/刘晓艳做图表作文框架，王江涛只借句式不直接套框架'
+    : /翻译/.test(text)
+      ? '英二主抓：唐静练拆主干和顺句序，别做成逐词对译'
+      : '英二主抓：柴荣做阅读逻辑，颉斌斌做长难句主干拆解';
+
+  const csCoach = /计网|TCP|子网|IP|CIDR/.test(text)
+    ? '408主抓：王道保应试主线，湖科大教书匠补计网理解和计算题直觉'
+    : /Cache|流水线|IEEE754|计组/.test(text)
+      ? '408主抓：王道主线 + 刘宏志补计组动画理解，重点盯 Cache/流水线'
+      : /操作系统|PV|页表|调度/.test(text)
+        ? '408主抓：王道主线 + 小林coding补 OS 图解，把流程图真正看懂'
+        : '408主抓：王道仍是主线，代码题一定落到手写，不要只看会';
+
+  const focus = pickPlan22Focus(anchorText);
+  const warning = pickPlan22Warning(anchorText);
+  const checkpoint = pickPlan22Checkpoint(anchorText, plan22.phase);
+
+  return {
+    phaseLabel: phaseName,
+    focus,
+    coaches: [mathCoach, englishCoach, csCoach],
+    warning,
+    checkpoint,
+  };
+}
+
+function build22408Note(dateStr, randomQuote, randomTip, plan22, card) {
+  return [
+    `📅 **每日一言**：${randomQuote}`,
+    `💡 **备考锦囊**：${randomTip}`,
+    `🎯 **22408阶段**：${card.phaseLabel}，今天先保主线完成率，再做额外拔高。`,
+    `🧠 **22408主提醒**：${card.focus}`,
+    `⚠️ **22408避坑**：${card.warning}`,
+    `💡 **22408策略**：${plan22.strategy.replace(/^💡\s*/, '')}`,
+  ].join('\n');
+}
+
 // ===== 任务指针（根据实际进度设置）=====
 // 数学：MATH_TASKS 已从第6讲开始，第1-5讲已移除，直接从索引0开始
 let mathIndex = 0;
@@ -1120,6 +1355,52 @@ while (currentDate <= END_DATE) {
       "challenge": randomChallenge,
       "note": `📅 **每日一言**：${randomQuote}\n💡 **备考锦囊**：${randomTip}`
     };
+
+    const plan22 = getPlan22(dateStr, scheduleData[dateStr]);
+    const monthDay = dateStr.slice(5);
+    let plan22Card, plan22Challenge, plan22Note;
+    if (monthDay === '12-19') {
+      plan22Card = {
+        phaseLabel: '第一考试日',
+        focus: '今日考试顺序：上午政治 → 下午英语二。考前只做轻量回顾，不扩新内容。',
+        coaches: [
+          '政治：上午 8:30 进场，全力作答，选择题稳住，分析题关键词全部写出来',
+          '英语二：下午 14:00 进场，先做阅读保底，作文留够 35min，翻译不纠结',
+          '数二/408：今晚只做 10min 模板回顾，早睡保体力迎明早数学二',
+        ],
+        warning: '考完政治立刻切走，不要反复对答案，把状态完整留给英语二。',
+        checkpoint: '英语二结束后立刻回家休息，今晚 22:00 前必须入睡，明早数学二才是主战场。',
+      };
+      plan22Challenge = '考前收口：确认文具/准考证/身份证已备好，规划好明早交通时间，杜绝一切不必要的焦虑信息输入。';
+      plan22Note = `📅 **每日一言**：${randomQuote}\n🎯 **22408阶段**：第一考试日——政治(上午) + 英语二(下午)\n📌 **今日核心**：考完政治立刻切走，不对答案，把状态完整留给英语二。英语二结束后早睡，明天数学二才是重头戏。\n⚡ **明日预告**：数学二 8:30 上午，408 14:00 下午，今晚 22:00 前入睡。`;
+    } else if (monthDay === '12-20') {
+      plan22Card = {
+        phaseLabel: '第二考试日',
+        focus: '今日考试顺序：上午数学二 → 下午 408。全力输出，不留遗憾。',
+        coaches: [
+          '数学二：上午 8:30 进场，先做会的题，大题步骤分写满，计算仔细',
+          '408：下午 14:00 进场，选择题稳住节奏，大题步骤全展开，代码框架写清楚',
+          '考后：无论结果，今晚好好休息，你已经尽力了',
+        ],
+        warning: '数学二做完不要纠结难题，立刻调整心态迎接 408，两科是独立战场。',
+        checkpoint: '408 考完即可，今晚不复盘不估分，给自己一个完整的放松夜。',
+      };
+      plan22Challenge = '考场策略：数学二先把会做的全写完，408 选择题控制在 60min 内，大题每道至少写出解题思路框架拿步骤分。';
+      plan22Note = `📅 **每日一言**：${randomQuote}\n🎯 **22408阶段**：第二考试日——数学二(上午) + 408(下午)\n📌 **今日核心**：数学二先做会的，步骤写满；408 选择题稳住，大题不留空白。\n🏁 **终点就在今天**：无论如何，全力以赴，不留遗憾。`;
+    } else {
+      plan22Card = build22408Card(plan22, dateStr);
+      plan22Challenge = build22408Challenge(plan22, monthInt, dateStr);
+      plan22Note = build22408Note(dateStr, randomQuote, randomTip, plan22, plan22Card);
+    }
+    schedule22Data[dateStr] = {
+      "math": plan22.math22,
+      "408": plan22.boost408,
+      "english": plan22.english22,
+      "politics": plan22.politics22,
+      "challenge": plan22Challenge,
+      "note": plan22Note,
+      "card": plan22Card
+    };
   }
 
   currentDate.setDate(currentDate.getDate() + 1);
@@ -1127,4 +1408,5 @@ while (currentDate <= END_DATE) {
 
 // 写入文件
 fs.writeFileSync(schedulePath, JSON.stringify(scheduleData, null, 2), 'utf-8');
+fs.writeFileSync(schedule22Path, JSON.stringify(schedule22Data, null, 2), 'utf-8');
 console.log(`Generated schedule from ${START_DATE.toISOString().split('T')[0]} to ${END_DATE.toISOString().split('T')[0]}`);

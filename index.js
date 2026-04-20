@@ -45,7 +45,7 @@ function getStudyPhase() {
   return { name: '考前冲刺', icon: '🚀', color: '#c4b5fd' };
 }
 
-function getDailyTimetable() {
+function getDailyTimetable(date = null) {
   // ══════════════════════════════════════════════════
   // 八字+星盘双系统推算最佳学习时段
   // 八字：丁火日主身弱，喜木火忌金水
@@ -55,7 +55,7 @@ function getDailyTimetable() {
   //       上升狮子(火象，上午阳气旺)
   // 双峰值：9:00-12:00 = 八字巳午火旺 × 星盘上升狮子 × 太阳处女逻辑峰
   // ══════════════════════════════════════════════════
-  const m = getNow().getMonth() + 1;
+  const m = (date || getNow()).getMonth() + 1;
 
   // 基础阶段 4-6月：约7h/天
   if (m >= 4 && m <= 6) return [
@@ -76,7 +76,7 @@ function getDailyTimetable() {
   ];
 
   // 真题阶段 9-10月中旬：约10h/天
-  if (m === 9 || (m === 10 && getNow().getDate() <= 15)) return [
+  if (m === 9 || (m === 10 && (date || getNow()).getDate() <= 15)) return [
     { subject: '� 英语',     time: '7:00–8:00',  duration: '1h',   tip: '卯辰时，真题阅读替代背词' },
     { subject: '📐 数学',     time: '9:00–12:30', duration: '3.5h', tip: '巳午时双峰，全真题计时模拟' },
     { subject: '💻 408',      time: '14:00–17:00',duration: '3h',   tip: '未时理解，申时前收尾（忌金时做难题）' },
@@ -115,6 +115,95 @@ function getProgressBar(percentage) {
   const filled = Math.round((percentage / 100) * length);
   const empty = length - filled;
   return '▓'.repeat(filled) + '░'.repeat(empty);
+}
+
+function getTeacherRemarks(todayTask, plan22, phase) {
+  const text = [
+    todayTask?.math,
+    todayTask?.['408'],
+    todayTask?.english,
+    todayTask?.politics,
+    plan22?.math,
+    plan22?.english,
+    plan22?.['408'],
+    plan22?.politics,
+  ].filter(Boolean).join(' | ');
+
+  const remarks = [];
+
+  if (/中值定理|拉格朗日|罗尔|柯西/.test(text)) {
+    remarks.push('📌 数学补充：中值定理辅助函数如果还不顺，优先补 `杨超` 的专题讲解，专治“会听不会构造”。');
+  }
+  if (/极限|连续/.test(text)) {
+    remarks.push('📌 数学补充：极限与连续卡壳时，可加看 `张宇` 的极限题型归纳，夹逼/等价无穷小/周期函数极限讲得更有题感。');
+  }
+  if (/线代|行列式|矩阵|向量组|方程组|特征值|二次型/.test(text)) {
+    remarks.push('📌 线代补充：主线按 `武宇乐（没咋了）` 走；若某个定义证明或基础概念还发虚，再用 `李永乐` 做查漏，不反客为主。');
+  }
+  if (/定积分几何应用|面积|体积|弧长|侧面积/.test(text)) {
+    remarks.push('📌 数学补充：定积分几何应用建议补 `武忠祥` 专题，面积/体积/弧长这类题型拆得更细。');
+  }
+  if (/微分方程/.test(text)) {
+    remarks.push('📌 数学补充：微分方程想稳拿分，优先跟 `张宇` 打主线，步骤模板再结合真题自己固化。');
+  }
+  if (/英语|阅读|长难句|主干公式|句句讲|读9项/.test(text)) {
+    remarks.push('📌 英语补充：英二阅读主线继续 `柴荣 + 颉斌斌`；如果你当天是长难句卡顿，优先回 `颉斌斌主干公式`，不要盲目加老师。');
+  }
+  if (/翻译/.test(text)) {
+    remarks.push('📌 英语补充：翻译专项优先 `唐静`，重点不是词对词，而是“拆主干 + 顺句序 + 补逻辑”。');
+  }
+  if (/作文|图表|小作文/.test(text)) {
+    remarks.push('📌 英语补充：作文以 `王江涛` 为模板库，但最后一定要整理你自己的定稿版，避免模板味过重。');
+  }
+  if (/完型/.test(text)) {
+    remarks.push('📌 英语补充：完型性价比不高，`易熙人` 带一遍方法足够，别在这块过度耗时。');
+  }
+  if (/数据结构|链表|树|图|拓扑|AOE|排序|栈|队列|KMP/.test(text)) {
+    remarks.push('📌 408补充：数据结构主线仍以 `王道` 为核心；代码手写薄弱时，可额外补 `B站 C语言/数据结构手写题`，重点补实现感。');
+  }
+  if (/组成原理|计组|Cache|IEEE754|流水线|指令/.test(text)) {
+    remarks.push('📌 408补充：计组计算题一定要自己列步骤；`王道` 够做主线，难点在 Cache、浮点数、流水线，建议单独整理公式卡。');
+  }
+  if (/操作系统|PV|进程|线程|调度|文件管理|死锁/.test(text)) {
+    remarks.push('📌 408补充：操作系统里 `PV` 和 `文件管理` 是大题高频坑点，主线用 `王道`，但必须靠你自己反复手写过程。');
+  }
+  if (/计网|网络|TCP|IP|子网|路由|拥塞/.test(text)) {
+    remarks.push('📌 408补充：计网易混概念多，建议继续以 `王道` 为主，尤其把 TCP、拥塞控制、子网划分做成一页对照表。');
+  }
+  if (/政治|马原|史纲|毛中特|思修|时政/.test(text) || phase.name === '强化阶段' || phase.name === '真题阶段' || phase.name === '冲刺阶段' || phase.name === '考前冲刺') {
+    remarks.push('📌 政治补充：主线继续 `腿姐技巧班 + 肖四肖八`；如果想把基础概念听顺一点，可补 `徐涛` 的马原/史纲基础讲解。');
+  }
+
+  return remarks.slice(0, 4);
+}
+
+function renderPlan22Card(card) {
+  if (!card) return '';
+  const coachLines = Array.isArray(card.coaches)
+    ? card.coaches.map(line => `> - ${line}`).join('\n')
+    : '';
+  return [
+    '> ',
+    '> 🗂 **22408作战卡**',
+    `> - **当前阶段**：${card.phaseLabel}`,
+    `> - **今日主攻**：${card.focus}`,
+    coachLines,
+    `> - **易错提醒**：${card.warning}`,
+    `> - **晚间验收**：${card.checkpoint}`,
+    '',
+  ].filter(Boolean).join('\n');
+}
+
+function renderPlan22TomorrowCard(card) {
+  if (!card) return '';
+  return [
+    '> ',
+    '> 🗓 **22408明日作战卡**',
+    `> - **明日主攻**：${card.focus}`,
+    `> - **明日避坑**：${card.warning}`,
+    `> - **收尾标准**：${card.checkpoint}`,
+    '',
+  ].filter(Boolean).join('\n');
 }
 
 // 模拟考 / 重要节点提醒（7天内预警）
@@ -205,6 +294,18 @@ export async function main(options = {}) {
   }
 
   const todayTask = scheduleData[todayStr];
+  const schedule22Path = path.join(__dirname, 'schedule22.json');
+  let schedule22Data = {};
+  try {
+    if (fs.existsSync(schedule22Path)) {
+      schedule22Data = JSON.parse(fs.readFileSync(schedule22Path, 'utf-8'));
+    } else {
+      console.warn('schedule22.json not found! Please run generate_schedule.js first.');
+    }
+  } catch (err) {
+    console.error('读取 schedule22.json 失败:', err.message);
+  }
+  const todayTask22 = schedule22Data[todayStr];
   
   // 2. 计算本地数据
   const daysLeft = getCountdown();
@@ -213,6 +314,9 @@ export async function main(options = {}) {
   const fortune = getDailyFortune();
   const phase = getStudyPhase();
   const timetable = getDailyTimetable();
+  const tomorrowDate = new Date(now);
+  tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+  const tomorrowTimetable = getDailyTimetable(tomorrowDate);
   const milestone = getExamMilestone();
   const crisisAlert = getCrisisAlert();
   const healthTip = getHealthTip();
@@ -282,9 +386,40 @@ export async function main(options = {}) {
       content += `> 🧭 **今日提醒**\n`;
       content += `${noteLines}\n`;
     }
+    const teacherRemarks = getTeacherRemarks(todayTask, todayTask22, phase);
+    if (teacherRemarks.length) {
+      content += `> \n`;
+      content += `> 🧑‍🏫 **补充名师备注**\n`;
+      content += teacherRemarks.map(line => `> ${line}`).join('\n') + `\n`;
+    }
   } else {
     content += `> 🎉 今日无特定任务，建议复习错题或休息。\n`;
   }
+
+  // --- 🔀 22408 对比方案 (数二 + 英二 + 柴荣/颉斌斌体系) ---
+  if (todayTask22) {
+    content += `\n> ## 🔀 22408 对比方案 · ${todayStr} (数二·英二·柴荣/颉斌斌)\n`;
+    content += `> ⬜ **📐 数二** → ${todayTask22.math}\n`;
+    content += `> ⬜ **💻 408** → ${todayTask22['408']}\n`;
+    content += `> ⬜ **📖 英二** → ${todayTask22.english}\n`;
+    content += `> ⬜ **🏴 政治** → ${todayTask22.politics}\n`;
+    if (todayTask22.challenge) {
+      content += `> \n`;
+      content += `> 🚀 **22408加固动作**: ${todayTask22.challenge}\n`;
+    }
+    if (todayTask22.note) {
+      const note22Lines = String(todayTask22.note)
+        .split('\n')
+        .filter(Boolean)
+        .map(line => `> ${line}`)
+        .join('\n');
+      content += `> \n`;
+      content += `> 🧭 **22408提醒**\n`;
+      content += `${note22Lines}\n`;
+    }
+    content += renderPlan22Card(todayTask22.card);
+  }
+
   // AI 个性化激励
   if (aiContent && aiContent.encouragement) {
     content += `\n> 💬 ${aiContent.encouragement}\n`;
@@ -431,17 +566,19 @@ export async function main(options = {}) {
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tmStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth()+1).padStart(2,'0')}-${String(tomorrow.getDate()).padStart(2,'0')}`;
   const tomorrowTask = scheduleData[tmStr];
+  const tomorrowTask22 = schedule22Data[tmStr];
   // 从时间表中提取各科时段信息
   const tmSlot = (keyword) => {
-    const t = timetable.find(t => t.subject.includes(keyword));
+    const t = tomorrowTimetable.find(t => t.subject.includes(keyword));
     return t ? ` \`${t.time}\` *(${t.duration})*` : '';
   };
   content += `\n---\n### 📅 明日预览 (${tmStr})\n`;
-  if (tomorrowTask) {
-    content += `> ⬜ 📐 **数学**${tmSlot('数学')} → ${fmtTask(scheduleData, 'math', tomorrowTask.math)}\n`;
-    content += `> ⬜ 💻 **408**${tmSlot('408')} → ${fmtTask(scheduleData, '408', tomorrowTask['408'])}\n`;
-    content += `> ⬜ 📖 **英语**${tmSlot('英语')} → ${tomorrowTask.english}\n`;
-    if (tomorrowTask.politics) content += `> ⬜ 🏴 **政治** → ${tomorrowTask.politics}\n`;
+  if (tomorrowTask22) {
+    content += `> ⬜ 📐 **数学**${tmSlot('数学')} → ${tomorrowTask22.math}\n`;
+    content += `> ⬜ 💻 **408**${tmSlot('408')} → ${tomorrowTask22['408']}\n`;
+    content += `> ⬜ 📖 **英语**${tmSlot('英语')} → ${tomorrowTask22.english}\n`;
+    content += `> ⬜ 🏴 **政治** → ${tomorrowTask22.politics}\n`;
+    content += renderPlan22TomorrowCard(tomorrowTask22.card);
   } else {
     content += `> 明日暂无特定任务，可自由安排复习或休息。\n`;
   }
@@ -453,7 +590,7 @@ export async function main(options = {}) {
 
   // 7. 生成本地 Dashboard
   try {
-    const dashboardHtml = generateDashboard(config, weather, quote, fortune, clothing, todayTask, progress, daysLeft, dailyQuiz, dailyWord, streak, phase, aiContent, timetable);
+    const dashboardHtml = generateDashboard(config, weather, quote, fortune, clothing, todayTask, progress, daysLeft, dailyQuiz, dailyWord, streak, phase, aiContent, timetable, todayTask22, tomorrowTask22);
     const dashboardPath = path.join(__dirname, 'dashboard.html');
     fs.writeFileSync(dashboardPath, dashboardHtml, 'utf-8');
     console.log(`\n✅ 本地打卡看板已生成: ${dashboardPath}`);

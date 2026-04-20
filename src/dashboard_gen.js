@@ -2,12 +2,27 @@ import { getHealthTip } from './health.js';
 import { getMonthlyTarot } from './tarot.js';
 import { getStudyFortune } from './fortune.js';
 
-export function generateDashboard(config, weather, quote, fortune, clothing, task, progress, daysLeft, dailyQuiz, dailyWord, streak = 0, phase = null, aiContent = null, timetable = null) {
+export function generateDashboard(config, weather, quote, fortune, clothing, task, progress, daysLeft, dailyQuiz, dailyWord, streak = 0, phase = null, aiContent = null, timetable = null, plan22Task = null, tomorrowPlan22Task = null) {
   const healthTip = getHealthTip(); // 获取健康建议
   const tarot = getMonthlyTarot(); // 获取本月塔罗牌提醒
   const sf = getStudyFortune(fortune.element); // 获取学习运势
   // phase 由 index.js 传入，此处兜底
   const _phase = phase || { name: '基础阶段', icon: '📖', color: '#93c5fd' };
+  const renderPlan22Card = (label, entry) => {
+    if (!entry || !entry.card) return '';
+    return `
+    <div class="card" style="margin: 0 20px 20px 20px; background: linear-gradient(135deg,#eef2ff,#f5f3ff); border: 2px solid #8b5cf6;">
+      <h3 style="color:#5b21b6; border-bottom-color:#c4b5fd;">🗂 ${label}</h3>
+      <div style="display:flex; flex-direction:column; gap:10px; font-size:13px; color:#374151; line-height:1.7;">
+        <div style="background:#fff; border-radius:8px; padding:10px 12px;"><strong>当前阶段：</strong>${entry.card.phaseLabel}</div>
+        <div style="background:#fff; border-radius:8px; padding:10px 12px;"><strong>主攻重点：</strong>${entry.card.focus}</div>
+        <div style="background:#fff; border-radius:8px; padding:10px 12px;"><strong>老师抓手：</strong><br>${entry.card.coaches.map(item => `- ${item}`).join('<br>')}</div>
+        <div style="background:#fff7ed; border-radius:8px; padding:10px 12px; color:#9a3412;"><strong>易错提醒：</strong>${entry.card.warning}</div>
+        <div style="background:#ecfeff; border-radius:8px; padding:10px 12px; color:#155e75;"><strong>验收标准：</strong>${entry.card.checkpoint}</div>
+        ${entry.challenge ? `<div style="background:#f0fdf4; border-radius:8px; padding:10px 12px; color:#166534;"><strong>加固动作：</strong>${entry.challenge}</div>` : ''}
+      </div>
+    </div>`;
+  };
 
   const html = `
 <!DOCTYPE html>
@@ -143,6 +158,9 @@ export function generateDashboard(config, weather, quote, fortune, clothing, tas
       </div>
       ${aiContent && aiContent.study_strategy ? `<div style="margin-top:12px; padding:10px 14px; background:#eff6ff; border-radius:8px; color:#1e3a8a; font-size:13px; border-left:3px solid #3b82f6;">📌 <strong>今日策略</strong>: ${aiContent.study_strategy}</div>` : ''}
     </div>
+
+    ${renderPlan22Card('22408 今日作战卡', plan22Task)}
+    ${renderPlan22Card('22408 明日作战卡', tomorrowPlan22Task)}
 
     ${fortune.yijing ? (() => {
       const y = fortune.yijing;

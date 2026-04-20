@@ -9,7 +9,7 @@ dotenv.config({ path: path.join(__dirname, '../.env') });
 
 export default {
   city: process.env.CITY_NAME || '洛阳',
-  targetDate: process.env.TARGET_DATE || '2026-12-20',
+  targetDate: process.env.TARGET_DATE || '2026-12-19',
   
   email: {
     enable: process.env.ENABLE_EMAIL === 'true',
