@@ -598,6 +598,9 @@ function deriveMath22(dateStr, phase, week, dayOfWeek) {
   const dateLabel = toCnDateLabel(dateStr);
   const anchoredOffset = getDayOffset(dateStr, DAILY_ANCHOR_DATE);
   const monthDay = dateStr.slice(5);
+  if (monthDay === '12-21') {
+    return `【${dateLabel} 数二】考研已结束，把书收好，出去大吃一顿吧！`;
+  }
   if (anchoredOffset >= 0 && anchoredOffset < MATH2_DAILY_ANCHORED.length) {
     return `【${dateLabel} 数二】今天任务：${MATH2_DAILY_ANCHORED[anchoredOffset]} ｜ 进度锚点: 4月21日从张宇第9讲开始顺延`;
   }
@@ -663,6 +666,9 @@ function deriveEnglish22(dateStr, phase, week, dayOfWeek) {
   const dateLabel = toCnDateLabel(dateStr);
   const anchoredOffset = getDayOffset(dateStr, DAILY_ANCHOR_DATE);
   const monthDay = dateStr.slice(5);
+  if (monthDay === '12-21') {
+    return `【${dateLabel} 英二】英语战斗已结束，去拥抱没有长难句的新生活！`;
+  }
   if (anchoredOffset >= 0 && anchoredOffset < ENG2_DAILY_ANCHORED.length) {
     return `【${dateLabel} 英二】今天任务：${ENG2_DAILY_ANCHORED[anchoredOffset]} ｜ 进度锚点: 4月21日从柴荣第3讲 + 长难句第5讲开始顺延`;
   }
@@ -746,6 +752,9 @@ function derive408Boost(dateStr, phase, week, dayOfWeek) {
   const dateLabel = toCnDateLabel(dateStr);
   const anchoredOffset = getDayOffset(dateStr, DAILY_ANCHOR_DATE);
   const monthDay = dateStr.slice(5);
+  if (monthDay === '12-21') {
+    return `【${dateLabel} 408】代码和计算终于写完了，今天允许大脑死机，去放松吧！`;
+  }
   if (anchoredOffset >= 0 && anchoredOffset < CS408_DAILY_ANCHORED.length) {
     return `【${dateLabel} 408】今天任务：${CS408_DAILY_ANCHORED[anchoredOffset]} ｜ 进度锚点: 4月21日从数据结构第6章开始顺延`;
   }
@@ -800,6 +809,18 @@ function derive408Boost(dateStr, phase, week, dayOfWeek) {
     };
     return `【${dateLabel} 408】${tasks[dayOfWeek]}`;
   }
+  if (phase === 'final') {
+    const tasks = {
+      1: '今天任务：把数据结构必考代码(遍历/查找/排序)框架默写1次',
+      2: '今天任务：计网核心协议(TCP/IP)与拥塞控制图解闭卷画1次',
+      3: '今天任务：计组公式(Cache映射/流水线/浮点数)最后一次默写核对',
+      4: '今天任务：OS算法(PV/调度/页面置换)高频真题翻阅，看思路不手算',
+      5: '今天任务：错题本终极一刷，只看易错点结论',
+      6: '今天任务：全科大题步骤模板回忆，拿稳卷面分',
+      7: '今天任务：轻量保温（10 选择 + 1 大题模板），准备上战场',
+    };
+    return `【${dateLabel} 408考前】${tasks[dayOfWeek]}`;
+  }
   if (monthDay === '12-19') {
     return `【${dateLabel} 408考前】今天任务：只看 408 高频模板与易错点 20-30min，重点保留子网/TCP/Cache/PV/代码框架手感，不扩新题`;
   }
@@ -816,6 +837,9 @@ function derivePolitics22(dateStr, phase, week, dayOfWeek) {
   const dateLabel = toCnDateLabel(dateStr);
   const anchoredOffset = getDayOffset(dateStr, DAILY_ANCHOR_DATE);
   const monthDay = dateStr.slice(5);
+  if (monthDay === '12-21') {
+    return `【${dateLabel} 政治】终于不用背肖四了，考研结束，今天尽情休息！`;
+  }
   if (anchoredOffset >= 0 && anchoredOffset < POLITICS_DAILY_ANCHORED.length) {
     return `【${dateLabel} 政治】今天任务：${POLITICS_DAILY_ANCHORED[anchoredOffset]}`;
   }
