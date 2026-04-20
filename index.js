@@ -177,6 +177,70 @@ function getTeacherRemarks(todayTask, plan22, phase) {
   return remarks.slice(0, 4);
 }
 
+function getTeacherRemarks22(plan22) {
+  const text = [
+    plan22?.math,
+    plan22?.['408'],
+    plan22?.english,
+    plan22?.politics,
+    plan22?.note,
+  ].filter(Boolean).join(' | ');
+
+  const phaseLabel = plan22?.card?.phaseLabel || '';
+  const remarks = [];
+
+  if (/极限|连续|等价无穷小|夹逼/.test(text)) {
+    remarks.push('\uD83D\uDCCC 数二补充：极限优先跟 `张宇` 打题感，等价无穷小替换和夹逼是两条并行工具，先判断能否替换再选策略。');
+  }
+  if (/导数|求导|隐函数|参数方程/.test(text)) {
+    remarks.push('\uD83D\uDCCC 数二补充：导数细节多，`武宇乐（没咋了）` 的求导专题有归纳表，建议自己整理一张"求导规则速查卡"。');
+  }
+  if (/积分|换元|分部积分|不定积分|定积分/.test(text)) {
+    remarks.push('\uD83D\uDCCC 数二补充：积分换元/分部是高频考点，`武忠祥` 讲拆解最细；数二不考曲线/曲面积分，精力集中在一元积分应用。');
+  }
+  if (/多元函数|偏导|全微分|极值/.test(text)) {
+    remarks.push('\uD83D\uDCCC 数二补充：多元微分以 `张宇` 为主线，重点是条件极值（拉格朗日乘数法）和全微分，是数二区分度题型。');
+  }
+  if (/微分方程/.test(text)) {
+    remarks.push('\uD83D\uDCCC 数二补充：微分方程先辨型再套模板，`张宇` 分类最清晰；一阶线性 + 常系数二阶特解形式必须背熟。');
+  }
+  if (/线代|行列式|矩阵|向量组|方程组|特征值|二次型/.test(text)) {
+    remarks.push('\uD83D\uDCCC 数二线代：概念先靠 `武宇乐（没咋了）` 搞通，步骤用 `李永乐` 定标准；二次型正定判定是数二常考送分点。');
+  }
+  if (/阅读|柴荣|颉斌斌|逆向排除/.test(text)) {
+    remarks.push('\uD83D\uDCCC 英二补充：阅读核心是 `柴荣九项逆向排除`，做题前先定位主旨句；长难句卡顿时回 `颉斌斌主干公式`，不要来回换老师。');
+  }
+  if (/翻译|唐静/.test(text)) {
+    remarks.push('\uD83D\uDCCC 英二补充：翻译跟 `唐静`，"拆主干→顺句序→补逻辑"三步走；每天1~2句精翻比批量硬刷效果好。');
+  }
+  if (/作文|写作|图表|小作文/.test(text)) {
+    remarks.push('\uD83D\uDCCC 英二补充：英二大作文是**图表分析**（非图画！），用 `石雷鹏/刘晓艳` 三段式（描述→原因→建议）；切勿套英一图画模板。');
+  }
+  if (/新题型|选词填空/.test(text)) {
+    remarks.push('\uD83D\uDCCC 英二补充：英二新题型是"选词填空"，重点找词性+上下文逻辑，`颉斌斌` 有专项讲解，15h以内搞定即可。');
+  }
+  if (/完型/.test(text)) {
+    remarks.push('\uD83D\uDCCC 英二补充：完型性价比不高，`易熙人` 带一遍方法足够，把省出的时间给阅读和作文。');
+  }
+  if (/数据结构|链表|树|图|拓扑|排序|栈|队列|KMP/.test(text)) {
+    remarks.push('\uD83D\uDCCC 408补充：数据结构代码手写是硬门槛，`王道` 讲完后必须白纸手推链表/树核心操作，光看懂不算会。');
+  }
+  if (/计组|Cache|IEEE754|流水线|指令|组成原理/.test(text)) {
+    remarks.push('\uD83D\uDCCC 408补充：Cache映射/浮点数/流水线建议整理成独立公式卡，每次做题前默写一遍步骤框架。');
+  }
+  if (/操作系统|PV|进程|线程|调度|死锁|页面置换|内存/.test(text)) {
+    remarks.push('\uD83D\uDCCC 408补充：PV操作+调度计算是大题高频，必须手写伪代码过关；文件管理是第二坑点，整理好对照表。');
+  }
+  if (/计网|TCP|UDP|IP|子网|路由|拥塞|停等/.test(text)) {
+    remarks.push('\uD83D\uDCCC 408补充：子网划分/停等协议效率/拥塞窗口三类计算题，一定要形成固定步骤模板，见题就列式。');
+  }
+  if (/政治|肖四|肖八|腿姐|马原|史纲|毛中特|思修|时政/.test(text) || /冲刺|真题|强化|考前/.test(phaseLabel)) {
+    remarks.push('\uD83D\uDCCC 政治补充：选择题主线用 `腿姐技巧班`，大题背 `肖四` 核心关键词即可，不要全文死记；时政押题留11月底集中突击。');
+  }
+
+  return remarks.slice(0, 4);
+}
+
 function renderPlan22Card(card) {
   if (!card) return '';
   const coachLines = Array.isArray(card.coaches)
@@ -418,6 +482,12 @@ export async function main(options = {}) {
       content += `${note22Lines}\n`;
     }
     content += renderPlan22Card(todayTask22.card);
+    const remarks22 = getTeacherRemarks22(todayTask22);
+    if (remarks22.length) {
+      content += `> \n`;
+      content += `> 🧑‍🏫 **22408名师备注**\n`;
+      content += remarks22.map(line => `> ${line}`).join('\n') + '\n';
+    }
   }
 
   // AI 个性化激励
