@@ -117,16 +117,12 @@ function getProgressBar(percentage) {
   return '▓'.repeat(filled) + '░'.repeat(empty);
 }
 
-function getTeacherRemarks(todayTask, plan22, phase) {
+function getTeacherRemarks(todayTask, phase) {
   const text = [
     todayTask?.math,
     todayTask?.['408'],
     todayTask?.english,
     todayTask?.politics,
-    plan22?.math,
-    plan22?.english,
-    plan22?.['408'],
-    plan22?.politics,
   ].filter(Boolean).join(' | ');
 
   const remarks = [];
@@ -146,17 +142,20 @@ function getTeacherRemarks(todayTask, plan22, phase) {
   if (/微分方程/.test(text)) {
     remarks.push('📌 数学补充：微分方程想稳拿分，优先跟 `张宇` 打主线，步骤模板再结合真题自己固化。');
   }
-  if (/英语|阅读|长难句|主干公式|句句讲|读9项/.test(text)) {
-    remarks.push('📌 英语补充：英二阅读主线继续 `柴荣 + 颉斌斌`；如果你当天是长难句卡顿，优先回 `颉斌斌主干公式`，不要盲目加老师。');
+  if (/阅读|逆向排除/.test(text)) {
+    remarks.push('📌 英语阅读：`柴荣逆向排除法` 做题必须写出排除依据，不写等于没做；不要靠语感猜，排除依据是可以对答案的。');
+  }
+  if (/长难句|主干公式|句句讲|颉斌斌/.test(text)) {
+    remarks.push('📌 英语长难句：`颉斌斌主干公式` 先框谓语动词、再定从句边界；练完必须默写2句，只"听懂"不算真会。');
   }
   if (/翻译/.test(text)) {
-    remarks.push('📌 英语补充：翻译专项优先 `唐静`，重点不是词对词，而是“拆主干 + 顺句序 + 补逻辑”。');
+    remarks.push('📌 英语翻译：跟 `唐静`，"拆主干 → 顺句序 → 补逻辑"三步走；不要逐词硬翻，先抓句子主干。');
   }
   if (/作文|图表|小作文/.test(text)) {
-    remarks.push('📌 英语补充：作文以 `王江涛` 为模板库，但最后一定要整理你自己的定稿版，避免模板味过重。');
+    remarks.push('📌 英语作文：`王江涛` 为模板库，但最后一定要整理自己的定稿版，避免模板味过重。');
   }
   if (/完型/.test(text)) {
-    remarks.push('📌 英语补充：完型性价比不高，`易熙人` 带一遍方法足够，别在这块过度耗时。');
+    remarks.push('📌 英语完型：性价比不高，`易熙人` 带一遍方法足够，别在这块过度耗时。');
   }
   if (/数据结构|链表|树|图|拓扑|AOE|排序|栈|队列|KMP/.test(text)) {
     remarks.push('📌 408补充：数据结构主线仍以 `王道` 为核心；代码手写薄弱时，可额外补 `B站 C语言/数据结构手写题`，重点补实现感。');
@@ -170,7 +169,7 @@ function getTeacherRemarks(todayTask, plan22, phase) {
   if (/计网|网络|TCP|IP|子网|路由|拥塞/.test(text)) {
     remarks.push('📌 408补充：计网易混概念多，建议继续以 `王道` 为主，尤其把 TCP、拥塞控制、子网划分做成一页对照表。');
   }
-  if (/政治|马原|史纲|毛中特|思修|时政/.test(text) || phase.name === '强化阶段' || phase.name === '真题阶段' || phase.name === '冲刺阶段' || phase.name === '考前冲刺') {
+  if (/腿姐|肖四|肖八|时政/.test(text) || phase.name === '真题阶段' || phase.name === '冲刺阶段' || phase.name === '考前冲刺') {
     remarks.push('📌 政治补充：主线继续 `腿姐技巧班 + 肖四肖八`；如果想把基础概念听顺一点，可补 `徐涛` 的马原/史纲基础讲解。');
   }
 
@@ -183,7 +182,6 @@ function getTeacherRemarks22(plan22) {
     plan22?.['408'],
     plan22?.english,
     plan22?.politics,
-    plan22?.note,
   ].filter(Boolean).join(' | ');
 
   const phaseLabel = plan22?.card?.phaseLabel || '';
@@ -207,20 +205,23 @@ function getTeacherRemarks22(plan22) {
   if (/线代|行列式|矩阵|向量组|方程组|特征值|二次型/.test(text)) {
     remarks.push('\uD83D\uDCCC 数二线代：概念先靠 `武宇乐（没咋了）` 搞通，步骤用 `李永乐` 定标准；二次型正定判定是数二常考送分点。');
   }
-  if (/阅读|柴荣|颉斌斌|逆向排除/.test(text)) {
-    remarks.push('\uD83D\uDCCC 英二补充：阅读核心是 `柴荣九项逆向排除`，做题前先定位主旨句；长难句卡顿时回 `颉斌斌主干公式`，不要来回换老师。');
+  if (/阅读|逆向排除/.test(text)) {
+    remarks.push('\uD83D\uDCCC 英二阅读：今天用 `柴荣逆向排除法` 做题，每题必须写出排除依据；不要靠语感猜，排除依据是可以对答案的。');
+  }
+  if (/长难句|主干公式|句句讲|颉斌斌/.test(text)) {
+    remarks.push('\uD83D\uDCCC 英二长难句：`颉斌斌主干公式` 先框谓语动词、再定从句边界；练完必须默写2句，只"听懂"不算真会。');
   }
   if (/翻译|唐静/.test(text)) {
-    remarks.push('\uD83D\uDCCC 英二补充：翻译跟 `唐静`，"拆主干→顺句序→补逻辑"三步走；每天1~2句精翻比批量硬刷效果好。');
+    remarks.push('\uD83D\uDCCC 英二翻译：跟 `唐静`，"拆主干→顺句序→补逻辑"三步走；每天1~2句精翻比批量硬刷效果好。');
   }
   if (/作文|写作|图表|小作文/.test(text)) {
-    remarks.push('\uD83D\uDCCC 英二补充：英二大作文是**图表分析**（非图画！），用 `石雷鹏/刘晓艳` 三段式（描述→原因→建议）；切勿套英一图画模板。');
+    remarks.push('\uD83D\uDCCC 英二作文：英二是**图表分析**（非图画！），用 `石雷鹏/刘晓艳` 三段式（描述→原因→建议）；切勿套英一图画模板。');
   }
   if (/新题型|选词填空/.test(text)) {
-    remarks.push('\uD83D\uDCCC 英二补充：英二新题型是"选词填空"，重点找词性+上下文逻辑，`颉斌斌` 有专项讲解，15h以内搞定即可。');
+    remarks.push('\uD83D\uDCCC 英二新题型：英二新题型是"选词填空"，重点找词性+上下文逻辑，`颉斌斌` 有专项讲解，15h以内搞定即可。');
   }
   if (/完型/.test(text)) {
-    remarks.push('\uD83D\uDCCC 英二补充：完型性价比不高，`易熙人` 带一遍方法足够，把省出的时间给阅读和作文。');
+    remarks.push('\uD83D\uDCCC 英二完型：性价比不高，`易熙人` 带一遍方法足够，把省出的时间给阅读和作文。');
   }
   if (/数据结构|链表|树|图|拓扑|排序|栈|队列|KMP/.test(text)) {
     remarks.push('\uD83D\uDCCC 408补充：数据结构代码手写是硬门槛，`王道` 讲完后必须白纸手推链表/树核心操作，光看懂不算会。');
@@ -234,7 +235,7 @@ function getTeacherRemarks22(plan22) {
   if (/计网|TCP|UDP|IP|子网|路由|拥塞|停等/.test(text)) {
     remarks.push('\uD83D\uDCCC 408补充：子网划分/停等协议效率/拥塞窗口三类计算题，一定要形成固定步骤模板，见题就列式。');
   }
-  if (/政治|肖四|肖八|腿姐|马原|史纲|毛中特|思修|时政/.test(text) || /冲刺|真题|强化|考前/.test(phaseLabel)) {
+  if (/腿姐|肖四|肖八|时政/.test(text) || /冲刺|真题|考前/.test(phaseLabel)) {
     remarks.push('\uD83D\uDCCC 政治补充：选择题主线用 `腿姐技巧班`，大题背 `肖四` 核心关键词即可，不要全文死记；时政押题留11月底集中突击。');
   }
 
@@ -450,7 +451,7 @@ export async function main(options = {}) {
       content += `> 🧭 **今日提醒**\n`;
       content += `${noteLines}\n`;
     }
-    const teacherRemarks = getTeacherRemarks(todayTask, todayTask22, phase);
+    const teacherRemarks = getTeacherRemarks(todayTask, phase);
     if (teacherRemarks.length) {
       content += `> \n`;
       content += `> 🧑‍🏫 **补充名师备注**\n`;
@@ -466,7 +467,7 @@ export async function main(options = {}) {
     content += `> ⬜ **📐 数二** → ${todayTask22.math}\n`;
     content += `> ⬜ **💻 408** → ${todayTask22['408']}\n`;
     content += `> ⬜ **📖 英二** → ${todayTask22.english}\n`;
-    content += `> ⬜ **🏴 政治** → ${todayTask22.politics}\n`;
+    content += `> ⬜ **🏴 政治** → ${todayTask22.politics || '暂不启动，8月开始'}\n`;
     if (todayTask22.challenge) {
       content += `> \n`;
       content += `> 🚀 **22408加固动作**: ${todayTask22.challenge}\n`;
@@ -644,10 +645,11 @@ export async function main(options = {}) {
   };
   content += `\n---\n### 📅 明日预览 (${tmStr})\n`;
   if (tomorrowTask22) {
+    content += `> 🔀 **22408明日预告**\n`;
     content += `> ⬜ 📐 **数学**${tmSlot('数学')} → ${tomorrowTask22.math}\n`;
     content += `> ⬜ 💻 **408**${tmSlot('408')} → ${tomorrowTask22['408']}\n`;
     content += `> ⬜ 📖 **英语**${tmSlot('英语')} → ${tomorrowTask22.english}\n`;
-    content += `> ⬜ 🏴 **政治** → ${tomorrowTask22.politics}\n`;
+    content += `> ⬜ 🏴 **政治** → ${tomorrowTask22.politics || '暂不启动，8月开始'}\n`;
     content += renderPlan22TomorrowCard(tomorrowTask22.card);
   } else {
     content += `> 明日暂无特定任务，可自由安排复习或休息。\n`;

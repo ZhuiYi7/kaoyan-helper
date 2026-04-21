@@ -755,6 +755,12 @@ function derive408Boost(dateStr, phase, week, dayOfWeek) {
   if (monthDay === '12-21') {
     return `【${dateLabel} 408】代码和计算终于写完了，今天允许大脑死机，去放松吧！`;
   }
+  if (monthDay === '12-19') {
+    return `【${dateLabel} 408考前】今天任务：只看 408 高频模板与易错点 20-30min，重点保留子网/TCP/Cache/PV/代码框架手感，不扩新题`;
+  }
+  if (monthDay === '12-20') {
+    return `【${dateLabel} 408考试日】今天任务：上午数学结束后只过 408 高频模板和术语，14:00-17:00 按正式时间完成考试`;
+  }
   if (anchoredOffset >= 0 && anchoredOffset < CS408_DAILY_ANCHORED.length) {
     return `【${dateLabel} 408】今天任务：${CS408_DAILY_ANCHORED[anchoredOffset]} ｜ 进度锚点: 4月21日从数据结构第6章开始顺延`;
   }
@@ -821,12 +827,6 @@ function derive408Boost(dateStr, phase, week, dayOfWeek) {
     };
     return `【${dateLabel} 408考前】${tasks[dayOfWeek]}`;
   }
-  if (monthDay === '12-19') {
-    return `【${dateLabel} 408考前】今天任务：只看 408 高频模板与易错点 20-30min，重点保留子网/TCP/Cache/PV/代码框架手感，不扩新题`;
-  }
-  if (monthDay === '12-20') {
-    return `【${dateLabel} 408考试日】今天任务：上午数学结束后只过 408 高频模板和术语，14:00-17:00 按正式时间完成考试`;
-  }
   return `【${dateLabel} 408】今天任务：只做轻量保温（10 选择 + 1 大题模板回忆），不再扩题，保存体力迎考`;
 }
 
@@ -837,35 +837,28 @@ function derivePolitics22(dateStr, phase, week, dayOfWeek) {
   const dateLabel = toCnDateLabel(dateStr);
   const anchoredOffset = getDayOffset(dateStr, DAILY_ANCHOR_DATE);
   const monthDay = dateStr.slice(5);
+  const month = Number(dateStr.slice(5, 7));
+  const day = Number(dateStr.slice(8, 10));
   if (monthDay === '12-21') {
     return `【${dateLabel} 政治】终于不用背肖四了，考研结束，今天尽情休息！`;
   }
+  if (phase === 'prep' || month < 8) {
+    return '';
+  }
+  if (month === 8 && day <= 14) {
+    const rampActions = {
+      1: '徐涛强化课 1 讲（只听主干框架）+ 对应模块选择题 8-10 题，先建立章节地图，不追求题量',
+      2: '把昨天强化课压成半页结构卡 + 错题/蒙题回看 8 题，先练“为什么错”',
+      3: '马原/史纲核心概念口述 15min + 选择题 10 题，政治先求不断线，不抢主科时长',
+      4: '毛中特/习思想高频关键词过 1 轮 + 选择题 10 题，重点是认概念不是死背',
+      5: '腿姐技巧导学或技巧班 1 小节 + 8-10 题对应练习，先学排除思路，不急着冲正确率',
+      6: '肖1000 对应章节 10-15 题 + 错因归类，控制在 40min 内，避免把晚间主线拖散',
+      7: '政治周收口：回看本周结构卡 + 口述最弱模块 10min，只确认启动节奏已接上',
+    };
+    return `【${dateLabel} 政治】今天任务：${rampActions[dayOfWeek]}`;
+  }
   if (anchoredOffset >= 0 && anchoredOffset < POLITICS_DAILY_ANCHORED.length) {
     return `【${dateLabel} 政治】今天任务：${POLITICS_DAILY_ANCHORED[anchoredOffset]}`;
-  }
-  if (phase === 'prep') {
-    const actions = {
-      1: '政治预备：晚间 10min 浏览时政热词 + 记 3 个关键词，保持政治不完全陌生',
-      2: '政治预备：听 10-15min 徐涛/腿姐导学，先知道后期资料和阶段顺序',
-      3: '政治预备：写出五模块框架（马原/毛中特/史纲/思修法基/当代），只建结构不深学',
-      4: '政治预备：看 1 个马原基础概念短视频，用一句话复述要点',
-      5: '政治预备：浏览最近一周时政摘要，不记细枝末节，只记核心名词',
-      6: '政治预备：10min 回顾结构卡 + 判断最陌生模块，给后续启动做准备',
-      7: '政治预备收口：本周政治只做轻接触复盘，不得侵占数二/408主线时间',
-    };
-    return `【${dateLabel} 政治】今天任务：${actions[dayOfWeek]}`;
-  }
-  if (phase === 'base') {
-    const actions = {
-      1: '政治基础轻主线：徐涛强化导学/马原基础 20min + 整理 5 个关键词',
-      2: '政治基础轻主线：浏览肖1000目录与模块分布，明确后续刷题顺序，不正式开刷',
-      3: '政治基础轻主线：时政 10min + 马原/史纲概念辨析 10min，保持低频不断线',
-      4: '政治基础轻主线：听 15-20min 徐涛基础框架课，笔记只记标题不展开',
-      5: '政治基础轻主线：整理一页“后期资料作战顺序”卡（徐涛/肖1000/腿姐/肖八肖四）',
-      6: '政治基础轻主线：回顾本周接触过的 5-8 个政治关键词，口述一遍是什么意思',
-      7: '政治基础收口：本周政治只做结构回看与轻量接触，确认主科节奏未被打断',
-    };
-    return `【${dateLabel} 政治】今天任务：${actions[dayOfWeek]}`;
   }
   if (phase === 'strong') {
     const actions = {

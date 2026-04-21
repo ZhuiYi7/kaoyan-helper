@@ -1085,80 +1085,143 @@ function getPhaseDisplayName(phase) {
   }[phase] || '推进期';
 }
 
+function normalizePlan22TaskForCard(text) {
+  return String(text || '')
+    .split(' ｜ ')[0]
+    .split(' —— ')[0]
+    .replace(/【[^】]+】/g, '')
+    .trim();
+}
+
+function scorePlan22AnchorCandidate(key, text, phase) {
+  let score = 0;
+  if (key === 'math') {
+    if (/极限|连续|夹逼|等价无穷小/.test(text)) score += 4;
+    if (/线代|行列式|矩阵|向量组|方程组|特征值|二次型|积分|二重积分|微分方程|真题|模拟/.test(text)) score += 4;
+    if (/第\d+天|660|张宇|李林|武忠祥|没咋了/.test(text)) score += 2;
+  }
+  if (key === '408') {
+    if (/图|BFS|DFS|KMP|Cache|页表|PV|TCP|子网|计网|操作系统|计组|综合题|手写|计算题/.test(text)) score += 4;
+    if (/选择题|代码题|模板|复盘/.test(text)) score += 2;
+  }
+  if (key === 'english') {
+    if (/阅读|长难句|翻译|作文|新题型|真题|限时|干扰项/.test(text)) score += 4;
+    if (/柴荣|颉斌斌|唐静|王江涛|石雷鹏|刘晓艳/.test(text)) score += 2;
+  }
+  if (key === 'politics') {
+    if (/徐涛|腿姐|肖1000|肖八|肖四|时政|分析题|选择题|技巧班|强化课/.test(text)) score += 4;
+    if (phase === 'strong' || phase === 'real' || phase === 'sprint' || phase === 'final') score += 2;
+    if (/轻启动|预备|结构卡/.test(text)) score += 1;
+  }
+  return score;
+}
+
+function pickPlan22AnchorCandidate(plan22) {
+  const candidates = [
+    { key: 'math', text: normalizePlan22TaskForCard(plan22.math22), score: 0 },
+    { key: '408', text: normalizePlan22TaskForCard(plan22.boost408), score: 0 },
+    { key: 'english', text: normalizePlan22TaskForCard(plan22.english22), score: 0 },
+    { key: 'politics', text: normalizePlan22TaskForCard(plan22.politics22), score: 0 },
+  ];
+
+  for (const item of candidates) {
+    item.score = scorePlan22AnchorCandidate(item.key, item.text, plan22.phase);
+  }
+
+  candidates.sort((a, b) => b.score - a.score);
+  return candidates[0] || { key: '', text: '' };
+}
+
 function build22408Challenge(plan22, monthInt, dateStr) {
   const text = [plan22.math22, plan22.boost408, plan22.english22, plan22.politics22].join(' | ');
   const phase = plan22.phase;
+  const anchor = pickPlan22AnchorCandidate(plan22);
   const pool = [];
+  const subjectPools = {
+    math: [],
+    '408': [],
+    english: [],
+    politics: [],
+  };
 
   if (/积分|二重积分|微分方程|线代|行列式|矩阵|向量组|方程组|特征值|二次型/.test(text)) {
-    pool.push('数二加固：把今天对应章节的 2 道典型大题完整手写一遍，强制写出步骤分模板。');
-    pool.push('数二加固：闭卷复述今天的核心定义、判定条件和解题起手式，确认不是“看懂了但不会写”。');
+    subjectPools.math.push('数二加固：把今天对应章节的 2 道典型大题完整手写一遍，强制写出步骤分模板。');
+    subjectPools.math.push('数二加固：闭卷复述今天的核心定义、判定条件和解题起手式，确认不是“看懂了但不会写”。');
   }
   if (/图|BFS|DFS|KMP|Cache|页表|PV|TCP|子网|计网|操作系统|计组/.test(text)) {
-    pool.push('408加固：今晚再补 1 题手写代码或计算题，只练最核心步骤，不追求做多。');
-    pool.push('408加固：把今天最易混的 3 个概念做成速记对照表，睡前闭卷回忆一次。');
+    subjectPools['408'].push('408加固：今晚再补 1 题手写代码或计算题，只练最核心步骤，不追求做多。');
+    subjectPools['408'].push('408加固：把今天最易混的 3 个概念做成速记对照表，睡前闭卷回忆一次。');
     if (/数据结构|树|图|查找|排序|BFS|DFS|KMP/.test(text)) {
-      pool.push('408加固：把今天的数据结构核心代码框架再手写 1 遍，重点检查边界条件和变量定义。');
+      subjectPools['408'].push('408加固：把今天的数据结构核心代码框架再手写 1 遍，重点检查边界条件和变量定义。');
     }
     if (/计组|Cache|流水线|IEEE754|指令系统/.test(text)) {
-      pool.push('408加固：计组今天只盯 1 类计算题，把位数、单位和步骤模板写完整。');
+      subjectPools['408'].push('408加固：计组今天只盯 1 类计算题，把位数、单位和步骤模板写完整。');
     }
     if (/操作系统|PV|调度|页表|页面置换|虚拟内存/.test(text)) {
-      pool.push('408加固：把今天 OS 题目的流程图/状态表再画 1 遍，确保过程不是空的。');
+      subjectPools['408'].push('408加固：把今天 OS 题目的流程图/状态表再画 1 遍，确保过程不是空的。');
     }
     if (/子网|CIDR|IP|TCP|滑动窗口/.test(text)) {
-      pool.push('408加固：把今天的计网计算题模板重写 1 遍，确认子网/TCP过程能无提示列步骤。');
+      subjectPools['408'].push('408加固：把今天的计网计算题模板重写 1 遍，确认子网/TCP过程能无提示列步骤。');
     }
     if (/Cache|流水线|IEEE754|页表|PV|调度/.test(text)) {
-      pool.push('408加固：把今天最核心的 1 道计组/OS题按“公式-代入-步骤-结果”重写一遍。');
+      subjectPools['408'].push('408加固：把今天最核心的 1 道计组/OS题按“公式-代入-步骤-结果”重写一遍。');
     }
   }
   if (/英二|阅读|长难句|翻译|作文|新题型|柴荣|颉斌斌|唐静/.test(text)) {
-    pool.push('英二加固：把今天阅读/长难句里最卡的 2 句拆主干、翻译、回译各做一遍。');
-    pool.push('英二加固：把今日生词和熟词僻义整理成 1 组复习卡，明早再快速过一遍。');
+    subjectPools.english.push('英二加固：把今天阅读/长难句里最卡的 2 句拆主干、翻译、回译各做一遍。');
+    subjectPools.english.push('英二加固：把今日生词和熟词僻义整理成 1 组复习卡，明早再快速过一遍。');
     if (/阅读/.test(text)) {
-      pool.push('英二加固：把今天阅读最关键的 2 道题写出“定位句-正确依据-错误选项为什么错”。');
+      subjectPools.english.push('英二加固：把今天阅读最关键的 2 道题写出“定位句-正确依据-错误选项为什么错”。');
     }
     if (/长难句/.test(text)) {
-      pool.push('英二加固：把今天最绕的 2 句只做主干提取，不求全背，先保证能拆开。');
+      subjectPools.english.push('英二加固：把今天最绕的 2 句只做主干提取，不求全背，先保证能拆开。');
     }
     if (/作文|图表/.test(text)) {
-      pool.push('英二加固：把今天的大/小作文框架再默写 1 次，重点检查开头句、数据描述和结尾建议。');
+      subjectPools.english.push('英二加固：把今天的大/小作文框架再默写 1 次，重点检查开头句、数据描述和结尾建议。');
     }
     if (/小作文|书信|通知|告示/.test(text)) {
-      pool.push('英二加固：小作文只检查 3 件事：格式、称呼、结尾，先把基础分锁住。');
+      subjectPools.english.push('英二加固：小作文只检查 3 件事：格式、称呼、结尾，先把基础分锁住。');
     }
     if (/翻译/.test(text)) {
-      pool.push('英二加固：把今天翻译里最卡的 1 句按“主干-修饰-顺句序”三步再拆一遍。');
+      subjectPools.english.push('英二加固：把今天翻译里最卡的 1 句按“主干-修饰-顺句序”三步再拆一遍。');
     }
     if (/新题型/.test(text)) {
-      pool.push('英二加固：把今天新题型的判断依据写成 3 条，避免做题只凭语感。');
+      subjectPools.english.push('英二加固：把今天新题型的判断依据写成 3 条，避免做题只凭语感。');
     }
   }
   if (/政治|徐涛|腿姐|肖秀荣|时政/.test(text) || monthInt >= 8) {
-    pool.push('政治加固：把今天接触到的 1 个政治知识点压成“考点-关键词-常见陷阱”三行笔记。');
+    subjectPools.politics.push('政治加固：把今天接触到的 1 个政治知识点压成“考点-关键词-常见陷阱”三行笔记。');
     if (phase === 'prep' || phase === 'base') {
-      pool.push('政治加固：只用 10 分钟把五模块结构和后期资料顺序口述一遍，保持不断线即可。');
+      subjectPools.politics.push('政治加固：只用 10 分钟把五模块结构和后期资料顺序口述一遍，保持不断线即可。');
     }
     if (phase === 'strong' || phase === 'real') {
-      pool.push('政治加固：把今天选择题错因归类成“知识点模糊/关键词误判/绝对化排除失误”三类。');
+      subjectPools.politics.push('政治加固：把今天选择题错因归类成“知识点模糊/关键词误判/绝对化排除失误”三类。');
     }
     if (phase === 'sprint' || phase === 'final') {
-      pool.push('政治加固：把今天背过的分析题关键词再闭卷默写 1 次，重点查漏而不是盲背新内容。');
+      subjectPools.politics.push('政治加固：把今天背过的分析题关键词再闭卷默写 1 次，重点查漏而不是盲背新内容。');
     }
   }
 
+  Object.values(subjectPools).forEach(items => pool.push(...items));
   if (phase === 'real' || phase === 'sprint' || phase === 'final') {
     pool.push('套卷加固：今天至少做一次限时收口，不能只看解析不动笔。');
   }
   if (!pool.length) {
     pool.push('收口加固：今晚用 20 分钟做一次主动回忆，复述四科今天真正学会了什么。');
   }
-  return pool[dateHashIndex(dateStr, pool.length, 'plan22-challenge')];
+
+  const prioritizedPool = subjectPools[anchor.key]?.length ? [...subjectPools[anchor.key]] : [...pool];
+  if ((phase === 'real' || phase === 'sprint' || phase === 'final') && !prioritizedPool.includes('套卷加固：今天至少做一次限时收口，不能只看解析不动笔。')) {
+    prioritizedPool.push('套卷加固：今天至少做一次限时收口，不能只看解析不动笔。');
+  }
+  return prioritizedPool[dateHashIndex(dateStr, prioritizedPool.length, 'plan22-challenge')];
 }
 
 function pickPlan22Focus(text, phase) {
   if (phase === 'final') return '今日重心：只看自己整理的笔记和错题，绝对不要再开新的预测卷或视频课。';
+  if (/真题大题|大题规范书写|标准步骤|步骤分|限时精做/.test(text)) return '今日重心：大题训练先把起手、步骤和书写规范做稳，宁可少做一点，也不要把会做的题写得没分。';
+  if (/当日收口|最错3题|薄弱章节|最弱模块|回炉/.test(text)) return '今日重心：今天不是扩量日，而是收口日；只盯最弱点和最高频失分点，把漏洞真正补上。';
+  if (/极限|连续|夹逼|等价无穷小/.test(text)) return '今日重心：极限题先判断题型，再决定用代入、约分、夹逼还是等价无穷小，不要一上来就乱套模板。';
   if (/行列式/.test(text)) return '今日重心：行列式先分清性质、展开和初等变换，别把“能算”误当成“会判定”。';
   if (/矩阵/.test(text)) return '今日重心：矩阵题先判断对象和目标，逆矩阵、秩、初等变换的使用场景别混。';
   if (/向量组|线性方程组/.test(text)) return '今日重心：别只背结论，必须把“秩-相关性-方程组解结构”这条线打通。';
@@ -1172,11 +1235,11 @@ function pickPlan22Focus(text, phase) {
   if (/PV|调度|页表|页面置换|虚拟内存/.test(text)) return '今日重心：OS题先画流程或表格，PV、调度、页表题都要把中间过程显式写出。';
   if (/数据结构|树|图|查找|排序/.test(text)) return '今日重心：数据结构不是只会背概念，必须把结构特征、复杂度和代码框架串起来。';
   if (/图|BFS|DFS|KMP/.test(text)) return '今日重心：408代码题核心不是背代码，而是理解框架、边界条件和变量含义。';
-  if (/阅读/.test(text)) return '今日重心：阅读题必须落实到定位句、正确依据和干扰项排除，不能只看题感。';
-  if (/长难句/.test(text)) return '今日重心：长难句先拆主干再看修饰，主谓宾抓不住就别急着翻译全句。';
-  if (/翻译/.test(text)) return '今日重心：翻译题别逐词硬译，先拆主干、再理修饰、最后顺成中文句子。';
   if (/小作文|书信|通知|告示/.test(text)) return '今日重心：小作文先锁格式分，称呼、段落结构、结尾敬语一个都不能漏。';
-  if (/作文|图表/.test(text)) return '今日重心：英二作文先保证图表描述准确，再写原因和建议，别一上来就套空模板。';
+  if (/作文|图表|定稿|主题词|默写1篇|默写 1 篇/.test(text)) return '今日重心：英二作文先保证图表描述准确，再写原因和建议，定稿版必须写到顺手，别一上来就套空模板。';
+  if (/翻译/.test(text)) return '今日重心：翻译题别逐词硬译，先拆主干、再理修饰、最后顺成中文句子。';
+  if (/长难句/.test(text)) return '今日重心：长难句先拆主干再看修饰，主谓宾抓不住就别急着翻译全句。';
+  if (/阅读/.test(text)) return '今日重心：阅读题必须落实到定位句、正确依据和干扰项排除，不能只看题感。';
   if (/新题型/.test(text)) return '今日重心：新题型关键是找逻辑衔接和指代线索，不要只凭语感选。';
   if (/阅读|长难句|干扰项/.test(text)) return '今日重心：英二不是只看懂文章，而是定位依据、拆干扰项、复述逻辑链。';
   return '今日重心：所有科目都要从“看懂”推进到“能写、能复述、能限时完成”。';
@@ -1185,6 +1248,9 @@ function pickPlan22Focus(text, phase) {
 function pickPlan22Warning(text, phase) {
   if (phase === 'final') return '易错提醒：现在最大的敌人是感冒和失眠，注意保暖，晚上必须按时躺下。';
   if (/周日/.test(text)) return '易错提醒：周复盘不是放松日，必须把最差模块和最错题真正回炉。';
+  if (/真题大题|大题规范书写|标准步骤|步骤分|限时精做/.test(text)) return '易错提醒：大题最怕脑子会、笔下乱，关键定义、判定条件和步骤框架必须显式写出来。';
+  if (/当日收口|最错3题|薄弱章节|最弱模块|回炉/.test(text)) return '易错提醒：收口日最怕又去扩新题，今天只解决反复错的点，不要再给自己制造新坑。';
+  if (/极限|连续|夹逼|等价无穷小/.test(text)) return '易错提醒：极限最怕公式乱套和跳步，等价无穷小只在乘除中稳妥，加减法先想变形。';
   if (/行列式/.test(text)) return '易错提醒：行列式最怕性质乱用，先确认变换对象是行列式还是矩阵本体。';
   if (/矩阵|向量组|线性方程组/.test(text)) return '易错提醒：线代最怕定义没吃透就硬刷题，计算前先判断对象、秩和结论成立条件。';
   if (/特征值|二次型/.test(text)) return '易错提醒：特征值和二次型最怕算完不验，正交、合同、相似的关系不能混。';
@@ -1195,10 +1261,10 @@ function pickPlan22Warning(text, phase) {
   if (/PV|调度|页表|页面置换/.test(text)) return '易错提醒：OS题最怕过程只留结果，PV、调度、页表都得把中间状态写全。';
   if (/数据结构|树|图|查找|排序/.test(text)) return '易错提醒：数据结构最怕概念和代码脱节，复杂度、结构性质和题目实现必须同时会。';
   if (/图|BFS|DFS|KMP/.test(text)) return '易错提醒：408最怕“概念熟、步骤乱”，代码题和计算题都要按固定模板写。';
-  if (/阅读/.test(text)) return '易错提醒：阅读最怕只看正确答案不拆错误选项，干扰项逻辑一定要写出来。';
-  if (/长难句/.test(text)) return '易错提醒：长难句最怕一上来就全句硬翻，主干没找出来就一定会乱。';
-  if (/作文|图表/.test(text)) return '易错提醒：英二作文最怕模板味太重，先保证图表描述准确，再写原因和建议。';
   if (/小作文|书信|通知|告示/.test(text)) return '易错提醒：小作文最容易丢的是格式分，开头称呼和结尾敬语必须机械正确。';
+  if (/作文|图表|定稿|主题词|默写1篇|默写 1 篇/.test(text)) return '易错提醒：英二作文最怕模板味太重和定稿不稳定，先保证图表描述准确，再写原因和建议。';
+  if (/长难句/.test(text)) return '易错提醒：长难句最怕一上来就全句硬翻，主干没找出来就一定会乱。';
+  if (/阅读/.test(text)) return '易错提醒：阅读最怕只看正确答案不拆错误选项，干扰项逻辑一定要写出来。';
   if (/新题型/.test(text)) return '易错提醒：新题型最怕凭语感选，必须明确逻辑词、代词和上下文衔接。';
   if (/阅读|长难句|翻译/.test(text)) return '易错提醒：英语最怕只看解析不自己拆句，真正卡住的句子必须亲手写译文。';
   return '易错提醒：今天不要堆任务，先把主线任务做完整，再谈额外加练。';
@@ -1206,12 +1272,17 @@ function pickPlan22Warning(text, phase) {
 
 function pickPlan22Checkpoint(text, phase) {
   if (phase === 'final') return '晚间验收：闭眼能在脑海中过完四科的答题时间分配和突发情况预案。';
+  if (/真题大题|大题规范书写|标准步骤|步骤分|限时精做/.test(text)) return '晚间验收：把今天最关键的 1 道大题闭卷重写，检查起手、步骤分和术语是否都写到了。';
+  if (/当日收口|最错3题|薄弱章节|最弱模块|回炉/.test(text)) return '晚间验收：能否不用翻资料，说清今天补掉了哪 2 个漏洞，以及下次再遇到怎么起手。';
+  if (/极限|连续|夹逼|等价无穷小/.test(text)) return '晚间验收：闭卷复述今天每道极限题的起手判断，并重做 1 题确认方法没有选错。';
   if (/行列式|矩阵|向量组|线性方程组|特征值|二次型/.test(text)) return '晚间验收：闭卷说清今天线代章节的定义、核心结论和一道典型题起手步骤。';
   if (/积分|二重积分|微分方程/.test(text)) return '晚间验收：不用看答案重写 1 道积分或微分方程典型题，检查起手是否正确。';
   if (/子网|CIDR|TCP|Cache|流水线|IEEE754|PV|调度|页表/.test(text)) return '晚间验收：把今天最核心的 1 道计算题/流程题再做一遍，并口述每一步为什么这么写。';
   if (/数据结构|树|图|查找|排序|BFS|DFS|KMP/.test(text)) return '晚间验收：手写今天最核心的 1 个代码框架，并解释复杂度和边界条件。';
-  if (/阅读/.test(text)) return '晚间验收：把今天最关键的 2 道阅读题复述出定位句、依据句和错项原因。';
+  if (/小作文|书信|通知|告示/.test(text)) return '晚间验收：把今天的小作文格式、称呼、正文结构和结尾敬语完整默写 1 次。';
+  if (/作文|图表|定稿|主题词|默写1篇|默写 1 篇/.test(text)) return '晚间验收：把今天的大/小作文定稿框架闭卷写 1 次，检查图表描述、连接句和结尾建议是否顺手。';
   if (/长难句/.test(text)) return '晚间验收：把今天最难的 2 句重新拆主干并口头翻译，确认不是只看懂解析。';
+  if (/阅读/.test(text)) return '晚间验收：把今天最关键的 2 道阅读题复述出定位句、依据句和错项原因。';
   if (/阅读|长难句|翻译|作文/.test(text)) return '晚间验收：把今天最卡的 2 句或 1 段作文框架复述出来，确认不是只在看懂层面。';
   if (/新题型/.test(text)) return '晚间验收：把今天新题型的判断依据总结成 3 条规则，再回看 1 题验证。';
   if (phase === 'base' || phase === 'strong') return '晚间验收：能否不用看资料，说清今天四科各自推进到哪一讲/哪一章/哪一类题。';
@@ -1219,60 +1290,43 @@ function pickPlan22Checkpoint(text, phase) {
 }
 
 function pickPlan22Anchor(plan22) {
-  const candidates = [
-    { key: 'math', text: plan22.math22, score: 0 },
-    { key: '408', text: plan22.boost408, score: 0 },
-    { key: 'english', text: plan22.english22, score: 0 },
-    { key: 'politics', text: plan22.politics22, score: 0 },
-  ];
-
-  for (const item of candidates) {
-    const text = item.text || '';
-    if (item.key === 'math') {
-      if (/线代|行列式|矩阵|向量组|方程组|特征值|二次型|积分|二重积分|微分方程|真题|模拟/.test(text)) item.score += 4;
-      if (/第\d+天|660|张宇|李林|武忠祥|没咋了/.test(text)) item.score += 2;
-    }
-    if (item.key === '408') {
-      if (/图|BFS|DFS|KMP|Cache|页表|PV|TCP|子网|计网|操作系统|计组|综合题|手写|计算题/.test(text)) item.score += 4;
-      if (/选择题|代码题|模板|复盘/.test(text)) item.score += 2;
-    }
-    if (item.key === 'english') {
-      if (/阅读|长难句|翻译|作文|新题型|真题|限时|干扰项/.test(text)) item.score += 4;
-      if (/柴荣|颉斌斌|唐静|王江涛|石雷鹏|刘晓艳/.test(text)) item.score += 2;
-    }
-    if (item.key === 'politics') {
-      if (/徐涛|腿姐|肖1000|肖八|肖四|时政|分析题|选择题|技巧班|强化课/.test(text)) item.score += 4;
-      if (plan22.phase === 'strong' || plan22.phase === 'real' || plan22.phase === 'sprint' || plan22.phase === 'final') item.score += 2;
-      if (/轻启动|预备|结构卡/.test(text)) item.score += 1;
-    }
-  }
-
-  candidates.sort((a, b) => b.score - a.score);
-  return candidates[0]?.text || [plan22.math22, plan22.boost408, plan22.english22, plan22.politics22].filter(Boolean).join(' | ');
+  const anchor = pickPlan22AnchorCandidate(plan22);
+  return anchor.text || [plan22.math22, plan22.boost408, plan22.english22, plan22.politics22].map(normalizePlan22TaskForCard).filter(Boolean).join(' | ');
 }
 
 function build22408Card(plan22, dateStr) {
-  const text = [plan22.math22, plan22.boost408, plan22.english22, plan22.politics22].join(' | ');
+  const text = [plan22.math22, plan22.boost408, plan22.english22, plan22.politics22]
+    .map(normalizePlan22TaskForCard)
+    .join(' | ');
+  const mathText = normalizePlan22TaskForCard(plan22.math22);
+  const csText = normalizePlan22TaskForCard(plan22.boost408);
+  const englishText = normalizePlan22TaskForCard(plan22.english22);
   const anchorText = pickPlan22Anchor(plan22);
   const phaseName = getPhaseDisplayName(plan22.phase);
 
-  const mathCoach = /线代|行列式|矩阵|向量组|方程组|特征值|二次型/.test(text)
+  const mathCoach = /线代|行列式|矩阵|向量组|方程组|特征值|二次型/.test(mathText)
     ? '数二主抓：武宇乐（没咋了）理概念 + 李永乐题目定步骤'
-    : /积分|二重积分|微分方程/.test(text)
+    : /积分|二重积分|微分方程|中值定理|极限|连续/.test(mathText)
       ? '数二主抓：张宇推主线，卡题时切武忠祥补拆解'
       : '数二主抓：张宇主线推进，李林/660负责把题感做出来';
 
-  const englishCoach = /作文/.test(text)
+  const englishCoach = /作文|图表/.test(englishText)
     ? '英二主抓：石雷鹏/刘晓艳做图表作文框架，王江涛只借句式不直接套框架'
-    : /翻译/.test(text)
+    : /阅读|命题思路|干扰项|定位句/.test(englishText)
+      ? '英二主抓：柴荣做阅读逻辑，颉斌斌负责把长难句主干拆开，先保阅读得分效率'
+      : /长难句|句句讲|主干/.test(englishText)
+        ? '英二主抓：颉斌斌先把主干和从句层级拆顺，再回到阅读里验证，不要只听不拆'
+        : /翻译/.test(englishText)
       ? '英二主抓：唐静练拆主干和顺句序，别做成逐词对译'
-      : '英二主抓：柴荣做阅读逻辑，颉斌斌做长难句主干拆解';
+        : /新题型/.test(englishText)
+          ? '英二主抓：先按真题总结衔接线索和指代规则，老师只负责校准方法，不负责替你做判断'
+          : '英二主抓：柴荣做阅读逻辑，颉斌斌做长难句主干拆解';
 
-  const csCoach = /计网|TCP|子网|IP|CIDR/.test(text)
+  const csCoach = /计网|TCP|子网|IP|CIDR/.test(csText)
     ? '408主抓：王道保应试主线，湖科大教书匠补计网理解和计算题直觉'
-    : /Cache|流水线|IEEE754|计组/.test(text)
+    : /Cache|流水线|IEEE754|计组/.test(csText)
       ? '408主抓：王道主线 + 刘宏志补计组动画理解，重点盯 Cache/流水线'
-      : /操作系统|PV|页表|调度/.test(text)
+      : /操作系统|PV|页表|调度/.test(csText)
         ? '408主抓：王道主线 + 小林coding补 OS 图解，把流程图真正看懂'
         : '408主抓：王道仍是主线，代码题一定落到手写，不要只看会';
 
