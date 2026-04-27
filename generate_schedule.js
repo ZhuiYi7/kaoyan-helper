@@ -1322,7 +1322,7 @@ function build22408Card(plan22, dateStr) {
   const phaseName = getPhaseDisplayName(plan22.phase);
 
   const mathCoach = /线代|行列式|矩阵|向量组|方程组|特征值|二次型/.test(mathText)
-    ? '数二主抓：武宇乐（没咋了）理概念 + 李永乐题目定步骤'
+    ? '数二主抓：喻老负责基础入门，李永乐讲义定体系，武宇乐只补大题步骤分'
     : /积分|二重积分|微分方程|中值定理|极限|连续/.test(mathText)
       ? '数二主抓：张宇推主线，卡题时切武忠祥补拆解'
       : '数二主抓：张宇主线推进，李林/660负责把题感做出来';
@@ -1342,7 +1342,7 @@ function build22408Card(plan22, dateStr) {
   const csCoach = /计网|TCP|子网|IP|CIDR/.test(csText)
     ? '408主抓：王道保应试主线，湖科大教书匠补计网理解和计算题直觉'
     : /Cache|流水线|IEEE754|计组/.test(csText)
-      ? '408主抓：王道主线 + 刘宏志补计组动画理解，重点盯 Cache/流水线'
+      ? '408主抓：王道计组为主线，Cache/流水线看不懂时再找动画课作可选补充'
       : /操作系统|PV|页表|调度/.test(csText)
         ? '408主抓：王道主线 + 小林coding补 OS 图解，把流程图真正看懂'
         : '408主抓：王道仍是主线，代码题一定落到手写，不要只看会';

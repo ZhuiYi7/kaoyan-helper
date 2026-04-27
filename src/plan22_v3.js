@@ -7,7 +7,7 @@
 //   ✅ 讲师全覆盖 (2026最新配置):
 //        数二高数: 张宇(基础30讲+强化36讲) + 武忠祥(严选/1800题)
 //        数二线代: 基础入门听喻老线代, 李永乐《线性代数辅导讲义》负责体系定型, 武宇乐"没咋了"(B站《线代救命》#1-3 + 线代大题冲刺) 作步骤分和大题补充
-//        数二刷题: 李林(880/6+4套卷) + 李永乐线代讲义例题/660选填 + 武宇乐大题讲解作补充
+//        数二刷题: 李林880作为基础/强化主刷, 李永乐线代讲义例题/660选填作基础巩固, 张宇1000题只做薄弱专题B/C组补充
 //        数二模拟: 合工大超越 + 李林6+4套 + 武宇乐(26大题冲刺系列)
 //        英二阅读: 真题精读为主, 柴荣阅读方法论 + 颉斌斌题干/选项分析作补充
 //        英二长难句: 田静/颉斌斌主干拆句思路为主, 柴荣长难句串讲作补充
@@ -16,7 +16,7 @@
 //        英二完型: 易熙人(性价比低但带一遍)
 //        英二单词: 颉斌斌28天大纲单词 + 墨墨英二词库
 //   ✅ 真题覆盖: 数二 2003-2025 (23年) 按周双年份配对
-//   ✅ 冲刺期: 合工大超越4套 + 李林6套 + 李林4套 共14套按周排
+//   ✅ 冲刺期: 2025真题 + 合工大超越4套 + 李林6套 + 李林4套 共15次仿真/准仿真, 按天精做+复盘
 //   ✅ 考前: 每周独立动作, 最后两周降载
 // ════════════════════════════════════════════════════════════════
 
@@ -55,6 +55,23 @@ function cleanDailyTopicTitle(text) {
   return String(text || '')
     .replace(/^第\d+周\s*/, '')
     .trim();
+}
+
+function getMath2PracticeAddon(taskText, phase) {
+  const text = String(taskText || '');
+  if (phase === 'base') {
+    if (/线代|行列式|矩阵|向量组|方程组|特征值|二次型/.test(text)) {
+      return ' ｜ 配套刷题：李永乐线代讲义例题 + 660对应选填；若当天仍卡，再补李林880同章基础题8-12题';
+    }
+    return ' ｜ 配套刷题：李林880对应基础题10-15题；660只补选填薄弱点，张宇1000题暂不成套刷';
+  }
+  if (phase === 'strong') {
+    if (/线代|行列式|矩阵|向量组|方程组|特征值|二次型/.test(text)) {
+      return ' ｜ 配套刷题：李林880线代综合题 + 李永乐讲义错题二刷；张宇1000题只挑薄弱题型补充';
+    }
+    return ' ｜ 配套刷题：李林880强化题为主；张宇1000题只做对应薄弱专题B/C组，不全刷不抢真题时间';
+  }
+  return '';
 }
 
 function getStrategyTip(phase) {
@@ -546,14 +563,14 @@ const MATH2_REAL = {
 
 // 冲刺阶段 (week 29-36, 8周): 模拟卷+真题二刷+兜底
 const MATH2_SPRINT = {
-  29: { set: '数二真题 2025年 精做+复盘 + 合工大超越卷 第1套 + 武宇乐《26大题冲刺系列》B站1讲' },
-  30: { set: '合工大超越卷 第2套 + 数二真题 2021-2022 二刷 + 武宇乐《大题冲刺》2讲' },
-  31: { set: '合工大超越卷 第3套 + 数二真题 2023-2024 二刷 + 武宇乐大题系列 3讲' },
-  32: { set: '合工大超越卷 第4套 + 李林6套 第1套 + 武宇乐李林卷带刷(B站免费)' },
-  33: { set: '李林6套 第2套 + 武宇乐李林卷解析 + 核心公式与步骤分模板默写' },
-  34: { set: '李林6套 第3套 + 武宇乐《线代救命》三部曲回刷 + 错题本高频题三刷' },
-  35: { set: '李林6套 第4套 + 李林4套 第1套择一精做 + 高数错题精炼' },
-  36: { set: '李林4套 第2套择一精做 + 线代错题精炼 + 考前不再开新套卷' },
+  29: { setA: '数二真题 2025年 精做+复盘', setB: '合工大超越卷 第1套', focus: '用2025真题校准近年命题口味，再用超越卷打开模拟节奏' },
+  30: { setA: '合工大超越卷 第2套', setB: '合工大超越卷 第3套', focus: '连续两套超越卷训练压强，但必须隔天复盘，不允许只刷不改' },
+  31: { setA: '合工大超越卷 第4套', setB: '李林6套 第1套', focus: '从偏综合模拟切到李林卷，统计选择填空和大题失分结构' },
+  32: { setA: '李林6套 第2套', setB: '李林6套 第3套', focus: '李林卷中段，重点盯计算稳定性和线代步骤分' },
+  33: { setA: '李林6套 第4套', setB: '李林6套 第5套', focus: '维持整卷手感，同时把错题按高数/线代/审题三类归档' },
+  34: { setA: '李林6套 第6套', setB: '李林4套 第1套', focus: '完成李林6套闭环，进入李林4套考前定型卷' },
+  35: { setA: '李林4套 第2套', setB: '李林4套 第3套', focus: '李林4套中段，做完必须沉淀考前步骤模板和公式漏洞' },
+  36: { setA: '李林4套 第4套', setB: '近3年真题错题拼盘卷', focus: '最后一套只做节奏校准，随后转错题和模板，不再盲目扩新卷' },
 };
 
 // ────────────────────────────────────────────────────────────────
@@ -613,7 +630,8 @@ function deriveMath22(dateStr, phase, week, dayOfWeek) {
     return `【${dateLabel} 数二】考研已结束，把书收好，出去大吃一顿吧！`;
   }
   if (anchoredOffset >= 0 && anchoredOffset < MATH2_DAILY_ANCHORED.length) {
-    return `【${dateLabel} 数二】今天任务：${MATH2_DAILY_ANCHORED[anchoredOffset]} ｜ 进度锚点: 4月27日按真实进度从张宇第9讲收尾开始顺延`;
+    const task = MATH2_DAILY_ANCHORED[anchoredOffset];
+    return `【${dateLabel} 数二】今天任务：${task}${getMath2PracticeAddon(task, phase)} ｜ 进度锚点: 4月27日按真实进度从张宇第9讲收尾开始顺延`;
   }
   if (phase === 'prep') {
     return `【${dateLabel} 数二】高中函数/三角/导数基础回忆 + 熟悉数二考纲(不考概率统计/级数/曲线曲面/三重积分/傅里叶)`;
@@ -623,7 +641,7 @@ function deriveMath22(dateStr, phase, week, dayOfWeek) {
     if (!entry) return `【${dateLabel} 数二】按进度推进 (数据覆盖到 week 21)`;
     const topic = cleanDailyTopicTitle(entry.title);
     const day = cleanDailyTaskText(entry.days[dayOfWeek] || entry.days[7]);
-    return `【${dateLabel} 数二】今天任务：${day} ｜ 今日专题：${topic} ｜ 执行提醒：${entry.note}`;
+    return `【${dateLabel} 数二】今天任务：${day}${getMath2PracticeAddon(`${topic} ${day}`, phase)} ｜ 今日专题：${topic} ｜ 执行提醒：${entry.note}`;
   }
   if (phase === 'real') {
     const years = MATH2_REAL[week];
@@ -643,16 +661,18 @@ function deriveMath22(dateStr, phase, week, dayOfWeek) {
   if (phase === 'sprint') {
     const entry = MATH2_SPRINT[week];
     const isLateSprint = week >= 36;
+    const setA = entry ? (entry.setA || entry.set) : '模拟卷推进';
+    const setB = entry ? (entry.setB || entry.setA || entry.set || '下一套') : '下一套';
     const day = {
-      1: isLateSprint ? `📝 ${entry ? entry.set : '考前套卷收口'} — 只做选择填空节奏校准 + 1道大题保手感` : `📝 ${entry ? entry.set : '模拟卷推进'} — D1 精做(限时3h)`,
-      2: `🔁 D1 详细复盘 + 错因三分类(计算/思路/审题)`,
+      1: isLateSprint ? `📝 ${setA} — 限时3h精做，但不追加额外新卷` : `📝 ${setA} — 限时3h精做`,
+      2: `🔁 ${setA} 详细复盘 + 错因三分类(计算/思路/审题)`,
       3: `✍️ 高频错题二刷 (只做错≥2次的题)`,
       4: `📘 核心公式+解题步骤模板默写`,
-      5: isLateSprint ? `📝 ${entry ? entry.set : '考前套卷收口'} — 不再整卷，只挑最典型1道大题 + 1组选择填空` : `📝 ${entry ? entry.set : '下一套'} — D2 精做`,
+      5: isLateSprint ? `📝 ${setB} — 只做选择填空节奏校准 + 典型大题3题，不再硬拼新难题` : `📝 ${setB} — 限时3h精做`,
       6: isLateSprint ? `✍️ 线代只挑1道最典型大题保手感，重点检查步骤分` : `✍️ 线代大题专项(二次型/特征值/方程组) 3 题限时`,
       7: `🧠 当日收口：薄弱章节重练 + 最错3题整理`,
     }[dayOfWeek];
-    return `【${dateLabel} 数二冲刺】今天任务：${day}${entry ? ` ｜ 当前套卷: ${entry.set}` : ''}`;
+    return `【${dateLabel} 数二冲刺】今天任务：${day}${entry ? ` ｜ 仿真安排：${setA} / ${setB} ｜ 执行提醒：${entry.focus}` : ''}`;
   }
   if (monthDay === '12-19') {
     return `【${dateLabel} 数二考前】今天任务：今天不再碰整卷和难题，只过公式、错题索引和大题起手模板，给明早数学二留足体力`;
