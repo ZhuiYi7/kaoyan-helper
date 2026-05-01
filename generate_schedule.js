@@ -1322,13 +1322,13 @@ function build22408Card(plan22, dateStr) {
   const phaseName = getPhaseDisplayName(plan22.phase);
 
   const mathCoach = /线代|行列式|矩阵|向量组|方程组|特征值|二次型/.test(mathText)
-    ? '数二主抓：喻老负责基础入门，李永乐讲义定体系，武宇乐只补大题步骤分'
+    ? '数二主抓：喻老负责基础，李永乐线代讲义为主，武宇乐补大题'
     : /积分|二重积分|微分方程|中值定理|极限|连续/.test(mathText)
       ? '数二主抓：张宇推主线，卡题时切武忠祥补拆解'
       : '数二主抓：张宇主线推进，李林/660负责把题感做出来';
 
   const englishCoach = /作文|图表/.test(englishText)
-    ? '英二主抓：石雷鹏/刘晓艳做图表作文框架，王江涛只借句式不直接套框架'
+    ? '英二主抓：王江涛背范文定句型，亲自动手写成篇'
     : /阅读|命题思路|干扰项|定位句/.test(englishText)
       ? '英二主抓：柴荣做阅读逻辑，颉斌斌负责把长难句主干拆开，先保阅读得分效率'
       : /长难句|句句讲|主干/.test(englishText)
